@@ -8,6 +8,7 @@ import 'dart:typed_data';
 import 'dart:math' as math;
 
 part 'segment.dart';
+part 'player.dart';
 
 
 /**
@@ -46,13 +47,8 @@ class Lesson07 {
   webgl.UniformLocation _uAmbientColor;
   webgl.UniformLocation _uDirectionalColor;
   
+  Player player;  
   List<Segment> segments;
-
-  double _xRot = 0.0,
-      _xSpeed = 0.0,
-      _yRot = 0.0,
-      _ySpeed = 0.0,
-      _zPos = -5.0;
 
   int _filter = 0;
   double _lastTime = 0.0;
@@ -79,9 +75,11 @@ class Lesson07 {
     _mvMatrix = new Matrix4.identity();
     _pMatrix = new Matrix4.identity();
 
+    initGame();
     _initShaders();
     _initBuffers();
     _initTexture();
+    
 
     /*if (window.dynamic['requestAnimationFrame']) {
       _requestAnimationFrame = window.requestAnimationFrame;
@@ -100,6 +98,9 @@ class Lesson07 {
 
   }
 
+  void initGame() {
+    player = new Player();    
+  }
 
   void _initShaders() {
     // vertex shader source code. uPosition is our variable that we'll
@@ -296,12 +297,11 @@ class Lesson07 {
     // draw triangle
     _mvMatrix = new Matrix4.identity();
 
-    _mvMatrix.translate(new Vector3(0.0, 0.0, _zPos));
+    _mvMatrix.translate(new Vector3(player.position.x, player.position.y, player.zpos));
     _mvMatrix.rotate(new Vector3(1.0, 0.0, 0.0), radians(-90.0));
     
-    _mvMatrix.rotate(new Vector3(1.0, 0.0, 0.0), _degToRad(_xRot));
-    _mvMatrix.rotate(new Vector3(0.0, 1.0, 0.0), _degToRad(_yRot));
-    //_mvMatrix.rotate(_degToRad(_zRot), new Vector3.fromList([0, 0, 1]));
+    _mvMatrix.rotate(new Vector3(1.0, 0.0, 0.0), _degToRad(player.rotation.x));
+    _mvMatrix.rotate(new Vector3(0.0, 1.0, 1.0), _degToRad(player.rotation.y));
 
     // verticies
     _gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, _cubeVertexPositionBuffer);
@@ -356,36 +356,41 @@ class Lesson07 {
     if (_lastTime != 0) {
       double elapsed = timeNow - _lastTime;
 
-      _xRot += (_xSpeed * elapsed) / 1000.0;
-      _yRot += (_ySpeed * elapsed) / 1000.0;
+      player.move(elapsed);
     }
     _lastTime = timeNow;
   }
+  
+  bool pressed(num keycode) {
+    return (_currentlyPressedKeys.elementAt(keycode) != null && _currentlyPressedKeys.elementAt(keycode));
+  }
 
   void _handleKeys() {
-    if (_currentlyPressedKeys.elementAt(33) != null && _currentlyPressedKeys.elementAt(33)) {
-      // Page Up
-      _zPos -= 0.05;
+    if (pressed(87)) { //w
+      player.movement.add(player.rotation.clone().scale(0.0001));
     }
-    if (_currentlyPressedKeys.elementAt(34) != null && _currentlyPressedKeys.elementAt(34)) {
-      // Page Down
-      _zPos += 0.05;
+    if (pressed(83)) { //s
+      player.movement.add(player.rotation.clone().scale(-0.0001));
     }
-    if (_currentlyPressedKeys.elementAt(37) != null && _currentlyPressedKeys.elementAt(37)) {
-      // Left cursor key
-      _ySpeed -= 1;
+    if (pressed(65)) { //a
+      Matrix2 a = new Matrix2.rotation(radians(90.0));      
+      player.movement.add(a.transform(player.rotation.clone()).scale(-0.0001));
     }
-    if (_currentlyPressedKeys.elementAt(39) != null && _currentlyPressedKeys.elementAt(39)) {
-      // Right cursor key
-      _ySpeed += 1;
+    if (pressed(68)) { //d
+      Matrix2 a = new Matrix2.rotation(radians(90.0));      
+      player.movement.add(a.transform(player.rotation.clone()).scale(0.0001));
     }
-    if (_currentlyPressedKeys.elementAt(38) != null && _currentlyPressedKeys.elementAt(38)) {
-      // Up cursor key
-      _xSpeed -= 1;
+    if (pressed(81)) { //q
+      // doesn't work
+      Matrix2 a = new Matrix2.rotation(radians(1.0));
+      player.rotation = a.transform(player.rotation.clone()); 
     }
-    if (_currentlyPressedKeys.elementAt(40) != null && _currentlyPressedKeys.elementAt(40)) {
-      // Down cursor key
-      _xSpeed += 1;
+    if (pressed(69)) { //e
+      // doesn't work
+      Matrix2 a = new Matrix2.rotation(radians(-1.0));
+      player.rotation = a.transform(player.rotation.clone());
+    }
+    if (pressed(32)) { //space
     }
   }
 
