@@ -57,14 +57,17 @@ class Lesson07 {
 
   var _requestAnimationFrame;
 
+  
+  void resize(CanvasElement canvas, num width, num height) {
+    canvas.setAttribute("width",  "${width}px");
+    canvas.setAttribute("height",  "${height}px");
+    _viewportWidth = width;
+    _viewportHeight = height;
+  }
 
   Lesson07(CanvasElement canvas) {
     window.onResize.listen((e){
-      print("Resized window");
-      canvas.setAttribute("width",  "${e.currentTarget.innerWidth}px");
-          canvas.setAttribute("height",  "${e.currentTarget.innerHeight}px");
-      _viewportWidth = e.currentTarget.innerWidth;
-      _viewportHeight = e.currentTarget.innerHeight;
+      resize(canvas, e.currentTarget.innerWidth, e.currentTarget.innerHeight);
     });
     // weird, but without specifying size this array throws exception on []
     _currentlyPressedKeys = new List<bool>(128);
@@ -80,21 +83,13 @@ class Lesson07 {
     _initBuffers();
     _initTexture();
     
-
-    /*if (window.dynamic['requestAnimationFrame']) {
-      _requestAnimationFrame = window.requestAnimationFrame;
-    } else if (window.dynamic['requestAnimationFrame']) {
-      _requestAnimationFrame = window.requestAnimationFrame;
-    } else if (window.dynamic['mozRequestAnimationFrame']) {
-      _requestAnimationFrame = window.mozRequestAnimationFrame;
-    }*/
-    //_requestAnimationFrame = window.requestAnimationFrame;
-
     _gl.clearColor(0.0, 0.0, 0.0, 1.0);
     _gl.enable(webgl.RenderingContext.DEPTH_TEST);
 
     document.onKeyDown.listen(this._handleKeyDown);
     document.onKeyUp.listen(this._handleKeyUp);
+    
+    resize(canvas, window.innerWidth, window.innerHeight);
 
   }
 
