@@ -292,7 +292,7 @@ class Lesson07 {
     _gl.clear(webgl.RenderingContext.COLOR_BUFFER_BIT | webgl.RenderingContext.DEPTH_BUFFER_BIT);
 
     // field of view is 45°, width-to-height ratio, hide things closer than 0.1 or further than 100
-    _pMatrix = makePerspectiveMatrix(radians(45.0), _viewportWidth / _viewportHeight, 0.1, 100.0);
+    _pMatrix = makePerspectiveMatrix(radians(45.0), _viewportWidth / _viewportHeight, 0.01, 100.0);
 
     // draw triangle
     _mvMatrix = new Matrix4.identity();
@@ -301,7 +301,7 @@ class Lesson07 {
     
     _mvMatrix.rotate(new Vector3(0.0, 0.0, 1.0), math.atan2(player.rotation.x, player.rotation.y));
     //_mvMatrix.rotate(new Vector3(0.0, 1.0, 1.0), _degToRad(player.rotation.y));
-    _mvMatrix.translate(new Vector3(player.position.x, player.position.y, player.zpos));
+    _mvMatrix.translate(new Vector3(-player.position.x, -player.position.y, player.zpos));
 
     // verticies
     _gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, _cubeVertexPositionBuffer);
@@ -357,6 +357,7 @@ class Lesson07 {
       double elapsed = timeNow - _lastTime;
 
       player.move(elapsed);
+      player.clipMotion(segments);
     }
     _lastTime = timeNow;
   }
@@ -367,18 +368,18 @@ class Lesson07 {
 
   void _handleKeys() {
     if (pressed(87)) { //w
-      player.movement.add(player.rotation.clone().scale(-0.0001));
+      player.movement.add(player.rotation.clone().scale(0.0001));
     }
     if (pressed(83)) { //s
-      player.movement.add(player.rotation.clone().scale(0.0001));
+      player.movement.add(player.rotation.clone().scale(-0.0001));
     }
     if (pressed(65)) { //a
       Matrix2 a = new Matrix2.rotation(radians(90.0));      
-      player.movement.add(a.transform(player.rotation.clone()).scale(-0.0001));
+      player.movement.add(a.transform(player.rotation.clone()).scale(0.0001));
     }
     if (pressed(68)) { //d
       Matrix2 a = new Matrix2.rotation(radians(90.0));      
-      player.movement.add(a.transform(player.rotation.clone()).scale(0.0001));
+      player.movement.add(a.transform(player.rotation.clone()).scale(-0.0001));
     }
     if (pressed(81)) { //q
       // doesn't work

@@ -50,6 +50,30 @@ class Segment {
   Vector3 getV23D_high() {
     return new Vector3(v2.x,v2.y,high);
   }
+  Vector2 getTangent2D() {
+    return (v2-v1).normalize();
+  }
+  Vector2 getNormal2D() {
+    Vector2 tangent = getTangent2D();
+    return new Vector2(tangent.y, -tangent.x);
+  }
+  double getD() {
+    //dist from origin
+    Vector2 normal = getNormal2D();
+    return (v1.x*normal.x) + (v1.y*normal.y);    
+  }
+  double getSD() {
+    //dist to line from origin
+    Vector2 tangent = getTangent2D();
+    return (v1.x*tangent.x) + (v1.y*tangent.y);    
+  }
+  double getLength() {
+    return math.sqrt(((v2.x-v1.x)*(v2.x-v1.x))+((v2.y-v1.y)*(v2.y-v1.y)));
+  }
+  
+  bool isImpassable() {
+    return true;
+  }
   
   List<double> getNormals() {
     Vector3 normal = getV23D_low().sub(getV13D_low()).cross(getV23D_high().sub(getV13D_low())).normalize();
