@@ -99,16 +99,6 @@ class Lesson07 {
     document.onKeyDown.listen(this._handleKeyDown);
     document.onKeyUp.listen(this._handleKeyUp);
 
-    _elmLighting = document.querySelector("#lighting");
-    _elmAmbientR = document.querySelector("#ambientR");
-    _elmAmbientG = document.querySelector("#ambientG");
-    _elmAmbientB = document.querySelector("#ambientB");
-    _elmLightDirectionX = document.querySelector("#lightDirectionX");
-    _elmLightDirectionY = document.querySelector("#lightDirectionY");
-    _elmLightDirectionZ = document.querySelector("#lightDirectionZ");
-    _elmDirectionalR = document.querySelector("#directionalR");
-    _elmDirectionalG = document.querySelector("#directionalG");
-    _elmDirectionalB = document.querySelector("#directionalB");
   }
 
 
@@ -333,20 +323,17 @@ class Lesson07 {
     _gl.bindTexture(webgl.RenderingContext.TEXTURE_2D, _texture);
     //_gl.uniform1i(_uSamplerUniform, 0);
 
-    // draw lighting?
-    /*_gl.uniform1i(_uUseLighting, _elmLighting.checked ? 1 : 0); // must be int, not bool
-
-    if (_elmLighting.checked) {
-
-      _gl.uniform3f(_uAmbientColor, _elmAmbientR.valueAsNumber / 100, _elmAmbientG.valueAsNumber / 100, _elmAmbientB.valueAsNumber / 100);
-
-      Vector3 lightingDirection = new Vector3(_elmLightDirectionX.valueAsNumber / 100, _elmLightDirectionY.valueAsNumber / 100, _elmLightDirectionZ.valueAsNumber / 100);
+    if (false) {
+      // draw lighting
+      _gl.uniform1i(_uUseLighting, 1); // must be int, not bool
+      _gl.uniform3f(_uAmbientColor, 5 / 100, 5 / 100, 5 / 100);
+      Vector3 lightingDirection = new Vector3(10 / 100, 10 / 100, 10 / 100);
       Vector3 adjustedLD = lightingDirection.normalize();
       //adjustedLD.scale(-1.0);
       _gl.uniform3fv(_uLightingDirection, adjustedLD.storage);
       
-      _gl.uniform3f(_uDirectionalColor, _elmDirectionalR.valueAsNumber / 100, _elmDirectionalG.valueAsNumber / 100, _elmDirectionalB.valueAsNumber / 100);
-    }*/
+      _gl.uniform3f(_uDirectionalColor, 255 / 100, 200 / 100, 20 / 100);
+    }
 
     _gl.bindBuffer(webgl.RenderingContext.ELEMENT_ARRAY_BUFFER, _cubeVertexIndexBuffer);
     _setMatrixUniforms();
