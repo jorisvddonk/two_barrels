@@ -297,11 +297,11 @@ class Lesson07 {
     // draw triangle
     _mvMatrix = new Matrix4.identity();
 
-    _mvMatrix.translate(new Vector3(player.position.x, player.position.y, player.zpos));
     _mvMatrix.rotate(new Vector3(1.0, 0.0, 0.0), radians(-90.0));
     
-    _mvMatrix.rotate(new Vector3(1.0, 0.0, 0.0), _degToRad(player.rotation.x));
-    _mvMatrix.rotate(new Vector3(0.0, 1.0, 1.0), _degToRad(player.rotation.y));
+    _mvMatrix.rotate(new Vector3(0.0, 0.0, 1.0), math.atan2(player.rotation.x, player.rotation.y));
+    //_mvMatrix.rotate(new Vector3(0.0, 1.0, 1.0), _degToRad(player.rotation.y));
+    _mvMatrix.translate(new Vector3(player.position.x, player.position.y, player.zpos));
 
     // verticies
     _gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, _cubeVertexPositionBuffer);
@@ -367,10 +367,10 @@ class Lesson07 {
 
   void _handleKeys() {
     if (pressed(87)) { //w
-      player.movement.add(player.rotation.clone().scale(0.0001));
+      player.movement.add(player.rotation.clone().scale(-0.0001));
     }
     if (pressed(83)) { //s
-      player.movement.add(player.rotation.clone().scale(-0.0001));
+      player.movement.add(player.rotation.clone().scale(0.0001));
     }
     if (pressed(65)) { //a
       Matrix2 a = new Matrix2.rotation(radians(90.0));      

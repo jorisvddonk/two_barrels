@@ -8,7 +8,7 @@ class Player {
   Vector2 position;
   Vector2 rotation;
   Vector2 movement;
-  double zpos = 0.0;
+  double zpos = -0.5;
   
   Player () {
     this.position = new Vector2(0.0,0.0);
