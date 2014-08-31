@@ -297,7 +297,8 @@ class Lesson07 {
     _mvMatrix = new Matrix4.identity();
 
     _mvMatrix.translate(new Vector3(0.0, 0.0, _zPos));
-
+    _mvMatrix.rotate(new Vector3(1.0, 0.0, 0.0), radians(-90.0));
+    
     _mvMatrix.rotate(new Vector3(1.0, 0.0, 0.0), _degToRad(_xRot));
     _mvMatrix.rotate(new Vector3(0.0, 1.0, 0.0), _degToRad(_yRot));
     //_mvMatrix.rotate(_degToRad(_zRot), new Vector3.fromList([0, 0, 1]));
