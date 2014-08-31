@@ -9,7 +9,7 @@ class Segment {
   Vector2 v1;
   Vector2 v2;
   static const double low = 0.0;
-  static const double high = 5.0;
+  static const double high = 1.0;
   
   Segment (Vector2 v1, Vector2 v2) {
     this.v1 = v1;
@@ -35,7 +35,9 @@ class Segment {
   }
   
   List<double> getTextureCoords() {
-    return [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]; //TODO implement properly
+    double l = this.getLength();
+    double h = math.sqrt((high-low)*(high-low));
+    return [0.0, 0.0, l, 0.0, l, h, 0.0, h]; //TODO implement properly
   }
   
   Vector3 getV13D_low() {

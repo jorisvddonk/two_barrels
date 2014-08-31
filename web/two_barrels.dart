@@ -208,8 +208,8 @@ class Lesson07 {
   void _initBuffers() {
     segments = new List<Segment>();
     segments.add(new Segment(new Vector2(-1.0,-1.0), new Vector2(-1.0, 1.0)));
-    segments.add(new Segment(new Vector2(-1.0, 1.0), new Vector2( 1.0, 1.0)));
-    segments.add(new Segment(new Vector2( 1.0, 1.0), new Vector2( 1.0,-1.0)));
+    segments.add(new Segment(new Vector2(-1.0, 1.0), new Vector2( 2.0, 1.0)));
+    segments.add(new Segment(new Vector2( 2.0, 1.0), new Vector2( 2.0,-1.0)));
     
     
     
