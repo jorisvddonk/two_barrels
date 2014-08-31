@@ -7,6 +7,8 @@ import 'dart:web_gl' as webgl;
 import 'dart:typed_data';
 import 'dart:math' as math;
 
+part 'segment.dart';
+
 
 /**
  * based on:
@@ -43,11 +45,8 @@ class Lesson07 {
   webgl.UniformLocation _uLightingDirection;
   webgl.UniformLocation _uAmbientColor;
   webgl.UniformLocation _uDirectionalColor;
-
-  InputElement _elmLighting;
-  InputElement _elmAmbientR, _elmAmbientG, _elmAmbientB;
-  InputElement _elmLightDirectionX, _elmLightDirectionY, _elmLightDirectionZ;
-  InputElement _elmDirectionalR, _elmDirectionalG, _elmDirectionalB;
+  
+  List<Segment> segments;
 
   double _xRot = 0.0,
       _xSpeed = 0.0,
@@ -65,7 +64,7 @@ class Lesson07 {
 
   Lesson07(CanvasElement canvas) {
     window.onResize.listen((e){
-      print("WAT");
+      print("Resized window");
       canvas.setAttribute("width",  "${e.currentTarget.innerWidth}px");
           canvas.setAttribute("height",  "${e.currentTarget.innerHeight}px");
       _viewportWidth = e.currentTarget.innerWidth;
@@ -206,55 +205,52 @@ class Lesson07 {
   }
 
   void _initBuffers() {
+    segments = new List<Segment>();
+    segments.add(new Segment(new Vector2(-1.0,-1.0), new Vector2(-1.0, 1.0)));
+    segments.add(new Segment(new Vector2(-1.0, 1.0), new Vector2( 1.0, 1.0)));
+    segments.add(new Segment(new Vector2( 1.0, 1.0), new Vector2( 1.0,-1.0)));
+    
+    
+    
+    
     // variables to store verticies, tecture coordinates and colors
     List<double> vertices, textureCoords, vertexNormals, colors;
 
 
-    // create square
+    // vertex positions
     _cubeVertexPositionBuffer = _gl.createBuffer();
     _gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, _cubeVertexPositionBuffer);
-    // fill "current buffer" with triangle verticies
-    vertices = [// Front face
-      -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, // Back face
-      -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0, // Top face
-      -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, // Bottom face
-      -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0, // Right face
-      1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, // Left face
-      -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,];
+    vertices = segments.fold([], (prev, seg) {
+      prev.addAll(seg.getVertexPositions());
+      return prev;
+    });
     _gl.bufferData(webgl.RenderingContext.ARRAY_BUFFER, new Float32List.fromList(vertices), webgl.RenderingContext.STATIC_DRAW);
 
+    // texture coordinates
     _cubeVertexTextureCoordBuffer = _gl.createBuffer();
     _gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, _cubeVertexTextureCoordBuffer);
-    textureCoords = [// Front face
-      0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, // Back face
-      1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, // Top face
-      0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, // Bottom face
-      1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, // Right face
-      1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, // Left face
-      0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,];
+    textureCoords = segments.fold([], (prev, seg) {
+      prev.addAll(seg.getTextureCoords());
+      return prev;
+    });
     _gl.bufferData(webgl.RenderingContext.ARRAY_BUFFER, new Float32List.fromList(textureCoords), webgl.RenderingContext.STATIC_DRAW);
 
+    // geometry vertex indices
     _cubeVertexIndexBuffer = _gl.createBuffer();
     _gl.bindBuffer(webgl.RenderingContext.ELEMENT_ARRAY_BUFFER, _cubeVertexIndexBuffer);
-    List<int> _cubeVertexIndices = [0, 1, 2, 0, 2, 3, // Front face
-      4, 5, 6, 4, 6, 7, // Back face
-      8, 9, 10, 8, 10, 11, // Top face
-      12, 13, 14, 12, 14, 15, // Bottom face
-      16, 17, 18, 16, 18, 19, // Right face
-      20, 21, 22, 20, 22, 23 // Left face
-    ];
+    List<int> _cubeVertexIndices = segments.fold([], (prev, seg) {
+      prev.addAll(seg.getVertexIndices((prev.length/6).toInt()*4));
+      return prev;
+    });
     _gl.bufferData(webgl.RenderingContext.ELEMENT_ARRAY_BUFFER, new Uint16List.fromList(_cubeVertexIndices), webgl.RenderingContext.STATIC_DRAW);
 
 
     _cubeVertexNormalBuffer = _gl.createBuffer();
     _gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, _cubeVertexNormalBuffer);
-    vertexNormals = [// Front face
-      0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, // Back face
-      0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, // Top face
-      0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, // Bottom face
-      0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, // Right face
-      1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, // Left face
-      -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,];
+    vertexNormals = segments.fold([], (prev, seg) {
+      prev.addAll(seg.getNormals());
+      return prev;
+    });
     _gl.bufferData(webgl.RenderingContext.ARRAY_BUFFER, new Float32List.fromList(vertexNormals), webgl.RenderingContext.STATIC_DRAW);
 
   }
@@ -337,7 +333,7 @@ class Lesson07 {
 
     _gl.bindBuffer(webgl.RenderingContext.ELEMENT_ARRAY_BUFFER, _cubeVertexIndexBuffer);
     _setMatrixUniforms();
-    _gl.drawElements(webgl.RenderingContext.TRIANGLES, 36, webgl.RenderingContext.UNSIGNED_SHORT, 0);
+    _gl.drawElements(webgl.RenderingContext.TRIANGLES, segments.length*6, webgl.RenderingContext.UNSIGNED_SHORT, 0);
 
     // rotate
     _animate(time);
