@@ -14,8 +14,7 @@ part 'rendergroup.dart';
 /**
  * based on:
  * http://learningwebgl.com/blog/?p=571
- *
- * NOTE: To run this example you have to open in on a webserver (url starting with http:// NOT file:///)!
+ * https://github.com/martinsik/dart-webgl-tutorials
  */
 class Lesson07 {
 
@@ -79,8 +78,8 @@ class Lesson07 {
 
     initGame();
     _initShaders();
-    _initTexture("./trak3_panel1a.png");
-    _initTexture("./trak3_pores1a.png");
+    _initTexture("./assets/trak5/floor2a.png");
+    _initTexture("./assets/trak5/tile2a.png");
    _initBuffers();
 
     
@@ -213,8 +212,8 @@ class Lesson07 {
     fsegments.add(new Segment(new Vector2(-1.0,-1.0), new Vector2(2.0, -1.0)));
     
     
-    rendergroups[textures["./trak3_panel1a.png"]].segments = wsegments;
-    rendergroups[textures["./trak3_pores1a.png"]].segments = fsegments;
+    rendergroups[textures["./assets/trak5/tile2a.png"]].segments = wsegments;
+    rendergroups[textures["./assets/trak5/floor2a.png"]].segments = fsegments;
     
     
     rendergroups.forEach((texture, rendergroup){

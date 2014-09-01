@@ -37,7 +37,7 @@ class Segment {
   List<double> getTextureCoords() {
     double l = this.getLength();
     double h = math.sqrt((high-low)*(high-low));
-    return [0.0, 0.0, l, 0.0, l, h, 0.0, h]; //TODO implement properly
+    return [0.0, 0.0, l, 0.0, l, h, 0.0, h];
   }
   
   Vector3 getV13D_low() {

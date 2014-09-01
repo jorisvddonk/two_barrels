@@ -45,7 +45,7 @@ class RenderGroup {
       return prev;
     });
 
-
+    // normal vectors
     cubeVertexNormalBuffer = gl.createBuffer();
     vertexNormals = segments.fold([], (prev, seg) {
       prev.addAll(seg.getNormals());
@@ -72,11 +72,11 @@ class RenderGroup {
     gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, cubeVertexPositionBuffer);
     gl.vertexAttribPointer(_aVertexPosition, 3, webgl.RenderingContext.FLOAT, false, 0, 0);
 
-    // texture
+    // texture coordinates
     gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
     gl.vertexAttribPointer(_aTextureCoord, 2, webgl.RenderingContext.FLOAT, false, 0, 0);
 
-    // light
+    // normal vectors
     gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, cubeVertexNormalBuffer);
     gl.vertexAttribPointer(_aVertexNormal, 3, webgl.RenderingContext.FLOAT, false, 0, 0);
 
@@ -85,21 +85,6 @@ class RenderGroup {
 
 
     gl.bindBuffer(webgl.RenderingContext.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
-    //setMatrixUniforms();
     gl.drawElements(webgl.RenderingContext.TRIANGLES, segments.length*6, webgl.RenderingContext.UNSIGNED_SHORT, 0);
-
-    if (false) {
-      // draw lighting
-      /*
-      gl.uniform1i(_uUseLighting, 1); // must be int, not bool
-      gl.uniform3f(_uAmbientColor, 5 / 100, 5 / 100, 5 / 100);
-      Vector3 lightingDirection = new Vector3(10 / 100, 10 / 100, 10 / 100);
-      Vector3 adjustedLD = lightingDirection.normalize();
-      //adjustedLD.scale(-1.0);
-      gl.uniform3fv(_uLightingDirection, adjustedLD.storage);
-      
-      gl.uniform3f(_uDirectionalColor, 255 / 100, 200 / 100, 20 / 100);
-      */
-    }
   }
 } 

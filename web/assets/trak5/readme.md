@@ -1,0 +1,2 @@
+All of these textures are licensed under the MIT license and were made by Georges 'TRaK' Grondin as part of the TRaK5 textureset.
+See original_readme.txt for the original readme.txt file that came with the textureset.
