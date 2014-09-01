@@ -9,7 +9,7 @@ import 'dart:math' as math;
 
 part 'segment.dart';
 part 'player.dart';
-
+part 'rendergroup.dart';
 
 /**
  * based on:
@@ -24,12 +24,10 @@ class Lesson07 {
   webgl.Program _shaderProgram;
   int _viewportWidth, _viewportHeight;
 
-  webgl.Texture _texture;
+  HashMap<webgl.Texture, RenderGroup> rendergroups;
+  HashMap<String, webgl.Texture> textures;
 
-  webgl.Buffer _cubeVertexTextureCoordBuffer;
-  webgl.Buffer _cubeVertexPositionBuffer;
-  webgl.Buffer _cubeVertexIndexBuffer;
-  webgl.Buffer _cubeVertexNormalBuffer;
+
 
   Matrix4 _pMatrix;
   Matrix4 _mvMatrix;
@@ -48,7 +46,6 @@ class Lesson07 {
   webgl.UniformLocation _uDirectionalColor;
   
   Player player;  
-  List<Segment> segments;
 
   int _filter = 0;
   double _lastTime = 0.0;
@@ -77,11 +74,15 @@ class Lesson07 {
 
     _mvMatrix = new Matrix4.identity();
     _pMatrix = new Matrix4.identity();
+    textures = new HashMap<String, webgl.Texture>();
+    rendergroups = new HashMap<webgl.Texture, RenderGroup>();
 
     initGame();
     _initShaders();
-    _initBuffers();
-    _initTexture();
+    _initTexture("./trak3_panel1a.png");
+    _initTexture("./trak3_pores1a.png");
+   _initBuffers();
+
     
     _gl.clearColor(0.0, 0.0, 0.0, 1.0);
     _gl.enable(webgl.RenderingContext.DEPTH_TEST);
@@ -201,63 +202,38 @@ class Lesson07 {
   }
 
   void _initBuffers() {
-    segments = new List<Segment>();
-    segments.add(new Segment(new Vector2(-1.0,-1.0), new Vector2(-1.0, 1.0)));
-    segments.add(new Segment(new Vector2(-1.0, 1.0), new Vector2( 2.0, 1.0)));
-    segments.add(new Segment(new Vector2( 2.0, 1.0), new Vector2( 2.0,-1.0)));
+    List<Segment> wsegments, fsegments;
+    wsegments = new List<Segment>();
+    fsegments = new List<Segment>();
+    
+    wsegments.add(new Segment(new Vector2(-1.0,-1.0), new Vector2(-1.0, 1.0)));
+    wsegments.add(new Segment(new Vector2(-1.0, 1.0), new Vector2( 2.0, 1.0)));
+    wsegments.add(new Segment(new Vector2( 2.0, 1.0), new Vector2( 2.0,-1.0)));
+    
+    fsegments.add(new Segment(new Vector2(-1.0,-1.0), new Vector2(2.0, -1.0)));
     
     
+    rendergroups[textures["./trak3_panel1a.png"]].segments = wsegments;
+    rendergroups[textures["./trak3_pores1a.png"]].segments = fsegments;
     
     
-    // variables to store verticies, tecture coordinates and colors
-    List<double> vertices, textureCoords, vertexNormals, colors;
-
-
-    // vertex positions
-    _cubeVertexPositionBuffer = _gl.createBuffer();
-    _gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, _cubeVertexPositionBuffer);
-    vertices = segments.fold([], (prev, seg) {
-      prev.addAll(seg.getVertexPositions());
-      return prev;
+    rendergroups.forEach((texture, rendergroup){
+      rendergroup.initBuffers(_gl);
     });
-    _gl.bufferData(webgl.RenderingContext.ARRAY_BUFFER, new Float32List.fromList(vertices), webgl.RenderingContext.STATIC_DRAW);
-
-    // texture coordinates
-    _cubeVertexTextureCoordBuffer = _gl.createBuffer();
-    _gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, _cubeVertexTextureCoordBuffer);
-    textureCoords = segments.fold([], (prev, seg) {
-      prev.addAll(seg.getTextureCoords());
-      return prev;
-    });
-    _gl.bufferData(webgl.RenderingContext.ARRAY_BUFFER, new Float32List.fromList(textureCoords), webgl.RenderingContext.STATIC_DRAW);
-
-    // geometry vertex indices
-    _cubeVertexIndexBuffer = _gl.createBuffer();
-    _gl.bindBuffer(webgl.RenderingContext.ELEMENT_ARRAY_BUFFER, _cubeVertexIndexBuffer);
-    List<int> _cubeVertexIndices = segments.fold([], (prev, seg) {
-      prev.addAll(seg.getVertexIndices((prev.length/6).toInt()*4));
-      return prev;
-    });
-    _gl.bufferData(webgl.RenderingContext.ELEMENT_ARRAY_BUFFER, new Uint16List.fromList(_cubeVertexIndices), webgl.RenderingContext.STATIC_DRAW);
-
-
-    _cubeVertexNormalBuffer = _gl.createBuffer();
-    _gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, _cubeVertexNormalBuffer);
-    vertexNormals = segments.fold([], (prev, seg) {
-      prev.addAll(seg.getNormals());
-      return prev;
-    });
-    _gl.bufferData(webgl.RenderingContext.ARRAY_BUFFER, new Float32List.fromList(vertexNormals), webgl.RenderingContext.STATIC_DRAW);
-
   }
 
-  void _initTexture() {
-    _texture = _gl.createTexture();
+  void _initTexture(String src) {
+    webgl.Texture textur = _gl.createTexture();
+    textures[src] = textur;
     ImageElement image = new Element.tag('img');
     image.onLoad.listen((e) {
-      _handleLoadedTexture(_texture, image);
+      _handleLoadedTexture(textur, image);
     });
-    image.src = "./crate.gif";
+    image.src = src;
+    rendergroups.putIfAbsent(textur, (){
+      RenderGroup rg = new RenderGroup(textur, src);
+      return rg;
+    });
   }
 
   void _handleLoadedTexture(webgl.Texture texture, ImageElement img) {
@@ -289,49 +265,18 @@ class Lesson07 {
     // field of view is 45°, width-to-height ratio, hide things closer than 0.1 or further than 100
     _pMatrix = makePerspectiveMatrix(radians(45.0), _viewportWidth / _viewportHeight, 0.01, 100.0);
 
-    // draw triangle
+    // setup modelviewmatrix
     _mvMatrix = new Matrix4.identity();
-
-    _mvMatrix.rotate(new Vector3(1.0, 0.0, 0.0), radians(-90.0));
-    
+    _mvMatrix.rotate(new Vector3(1.0, 0.0, 0.0), radians(-90.0));    
     _mvMatrix.rotate(new Vector3(0.0, 0.0, 1.0), math.atan2(player.rotation.x, player.rotation.y));
-    //_mvMatrix.rotate(new Vector3(0.0, 1.0, 1.0), _degToRad(player.rotation.y));
     _mvMatrix.translate(new Vector3(-player.position.x, -player.position.y, player.zpos));
 
-    // verticies
-    _gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, _cubeVertexPositionBuffer);
-    _gl.vertexAttribPointer(_aVertexPosition, 3, webgl.RenderingContext.FLOAT, false, 0, 0);
-
-    // texture
-    _gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, _cubeVertexTextureCoordBuffer);
-    _gl.vertexAttribPointer(_aTextureCoord, 2, webgl.RenderingContext.FLOAT, false, 0, 0);
-
-    // light
-    _gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, _cubeVertexNormalBuffer);
-    _gl.vertexAttribPointer(_aVertexNormal, 3, webgl.RenderingContext.FLOAT, false, 0, 0);
-
-
-    _gl.activeTexture(webgl.RenderingContext.TEXTURE0);
-    _gl.bindTexture(webgl.RenderingContext.TEXTURE_2D, _texture);
-    //_gl.uniform1i(_uSamplerUniform, 0);
-
-    if (false) {
-      // draw lighting
-      _gl.uniform1i(_uUseLighting, 1); // must be int, not bool
-      _gl.uniform3f(_uAmbientColor, 5 / 100, 5 / 100, 5 / 100);
-      Vector3 lightingDirection = new Vector3(10 / 100, 10 / 100, 10 / 100);
-      Vector3 adjustedLD = lightingDirection.normalize();
-      //adjustedLD.scale(-1.0);
-      _gl.uniform3fv(_uLightingDirection, adjustedLD.storage);
-      
-      _gl.uniform3f(_uDirectionalColor, 255 / 100, 200 / 100, 20 / 100);
-    }
-
-    _gl.bindBuffer(webgl.RenderingContext.ELEMENT_ARRAY_BUFFER, _cubeVertexIndexBuffer);
     _setMatrixUniforms();
-    _gl.drawElements(webgl.RenderingContext.TRIANGLES, segments.length*6, webgl.RenderingContext.UNSIGNED_SHORT, 0);
-
-    // rotate
+    rendergroups.forEach((texture, rendergroup){
+      rendergroup.render(_gl, _aVertexPosition, _aTextureCoord, _aVertexNormal);
+    });
+    
+    // move
     _animate(time);
     _handleKeys();
 
@@ -352,7 +297,9 @@ class Lesson07 {
       double elapsed = timeNow - _lastTime;
 
       player.move(elapsed);
-      player.clipMotion(segments);
+      rendergroups.forEach((texture, rendergroup){
+        player.clipMotion(rendergroup.segments);
+      });
     }
     _lastTime = timeNow;
   }
