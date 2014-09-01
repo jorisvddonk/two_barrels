@@ -56,28 +56,6 @@ class Player {
             xNudge=segmentnorm.x*toPushOut*mul;
             yNudge=segmentnorm.y*toPushOut*mul;
             intersect = true;
-          } else {
-            /*
-            // Hit either corner of the linedef
-            double xd, yd;
-            if (sd<=0.0) {
-              xd = xp-seg.x0;
-              yd = yp-seg.y0;
-            } else {
-              xd = xp-seg.x1;
-              yd = yp-seg.y1;
-            }
-
-            double distSqr = xd*xd+yd*yd;
-            if (xd*xd+yd*yd<radius*radius) {
-              double dist = sqrt(distSqr);
-              double toPushOut = radius-dist+0.001;
-              xNudge=xd/dist*toPushOut;
-              yNudge=yd/dist*toPushOut;
-              intersect = true;
-            }
-            */
-
           }
         }
 
