@@ -2,12 +2,12 @@ part of two_barrels;
 
 class RenderGroup {
   /*
-   * Renders a group of segments using the same texture
+   * Renders a group of renderables using the same texture
    * 
    * 
    */
   webgl.Texture texture;
-  List<Segment> segments;
+  List<Renderable> renderables;
   webgl.Buffer cubeVertexTextureCoordBuffer;
   webgl.Buffer cubeVertexPositionBuffer;
   webgl.Buffer cubeVertexIndexBuffer;
@@ -19,35 +19,35 @@ class RenderGroup {
   
   RenderGroup (webgl.Texture texture, String texture_src) {
     this.texture = texture;
-    this.segments = new List<Segment>();
+    this.renderables = new List<Segment>();
     this.texture_src = texture_src;
   }
   
   void initBuffers(webgl.RenderingContext gl) {
     // vertex positions
     cubeVertexPositionBuffer = gl.createBuffer();
-    vertices = segments.fold([], (prev, seg) {
+    vertices = renderables.fold([], (prev, seg) {
       prev.addAll(seg.getVertexPositions());
       return prev;
     });
 
     // texture coordinates
     cubeVertexTextureCoordBuffer = gl.createBuffer();
-    textureCoords = segments.fold([], (prev, seg) {
+    textureCoords = renderables.fold([], (prev, seg) {
       prev.addAll(seg.getTextureCoords());
       return prev;
     });
 
     // geometry vertex indices
     cubeVertexIndexBuffer = gl.createBuffer();
-    cubeVertexIndices = segments.fold([], (prev, seg) {
+    cubeVertexIndices = renderables.fold([], (prev, seg) {
       prev.addAll(seg.getVertexIndices((prev.length/6).toInt()*4));
       return prev;
     });
 
     // normal vectors
     cubeVertexNormalBuffer = gl.createBuffer();
-    vertexNormals = segments.fold([], (prev, seg) {
+    vertexNormals = renderables.fold([], (prev, seg) {
       prev.addAll(seg.getNormals());
       return prev;
     });
@@ -85,6 +85,6 @@ class RenderGroup {
 
 
     gl.bindBuffer(webgl.RenderingContext.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
-    gl.drawElements(webgl.RenderingContext.TRIANGLES, segments.length*6, webgl.RenderingContext.UNSIGNED_SHORT, 0);
+    gl.drawElements(webgl.RenderingContext.TRIANGLES, renderables.length*6, webgl.RenderingContext.UNSIGNED_SHORT, 0);
   }
 } 

@@ -1,6 +1,6 @@
 part of two_barrels;
 
-class Segment extends Renderable {
+class FloorTile extends Renderable {
   /*
    * Wall segment consisting of two 2d vectors forming a wall segment
    * 
@@ -8,52 +8,55 @@ class Segment extends Renderable {
    */
   Vector2 v1;
   Vector2 v2;
+  Vector2 v3;
+  Vector2 v4;
   static const double low = 0.0;
-  static const double high = 1.0;
   
-  Segment (Vector2 v1, Vector2 v2) {
+  FloorTile (Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4) {
     this.v1 = v1;
     this.v2 = v2;
+    this.v3 = v3;
+    this.v4 = v4;
   }
   
   List<double> getVertexPositions() {
     /*
      * Vertex layout:
-     * v1 with height 0, v2 with height 0, v2 with height height, v1 with height height
+     * v1, v2, v3, v4. all @ low.
      * 
      * 
-     * v1/high <--- v2/high
-     *                   ^
-     *                   |
-     *                   |
-     *   v1/low  --->    v2/low
+     *   v4   <---  v3
+     *               ^
+     *               |
+     *               |
+     *   v1  --->    v2
      */
-    return [v1.x, v1.y, low, v2.x, v2.y, low, v2.x, v2.y, high, v1.x, v1.y, high];
+    return [v1.x, v1.y, low, v2.x, v2.y, low, v3.x, v3.y, low, v4.x, v4.y, low];
   }
   List<int> getVertexIndices(num offset) {
     return [offset+0, offset+1, offset+2, offset+0, offset+2, offset+3];
   }
   
   List<double> getTextureCoords() {
-    double l = this.getLength();
-    double h = math.sqrt((high-low)*(high-low));
-    return [0.0, 0.0, l, 0.0, l, h, 0.0, h];
+    return [0.0, 0.0, (v2-v1).x, (v2-v1).y, (v3-v1).x, (v3-v1).y, (v4-v1).x, (v4-v1).y];
   }
   
-  Vector3 getV13D_low() {
+  Vector3 getV13D() {
     return new Vector3(v1.x,v1.y,low);
   }
-  Vector3 getV13D_high() {
-    return new Vector3(v1.x,v1.y,high);
-  }
-  Vector3 getV23D_low() {
+  Vector3 getV23D() {
     return new Vector3(v2.x,v2.y,low);
   }
-  Vector3 getV23D_high() {
-    return new Vector3(v2.x,v2.y,high);
+  Vector3 getV33D() {
+    return new Vector3(v3.x,v3.y,low);
   }
+  Vector3 getV43D() {
+    return new Vector3(v4.x,v4.y,low);
+  }
+  
+  
   Vector2 getTangent2D() {
-    return (v2-v1).normalize();
+    return (v3-v1).normalize();
   }
   Vector2 getNormal2D() {
     Vector2 tangent = getTangent2D();
@@ -69,16 +72,9 @@ class Segment extends Renderable {
     Vector2 tangent = getTangent2D();
     return (v1.x*tangent.x) + (v1.y*tangent.y);    
   }
-  double getLength() {
-    return math.sqrt(((v2.x-v1.x)*(v2.x-v1.x))+((v2.y-v1.y)*(v2.y-v1.y)));
-  }
-  
-  bool isImpassable() {
-    return true;
-  }
   
   List<double> getNormals() {
-    Vector3 normal = getV23D_low().sub(getV13D_low()).cross(getV23D_high().sub(getV13D_low())).normalize();
+    Vector3 normal = (getV23D()-getV13D()).cross((getV33D()-getV13D())).normalize();
     return [normal.x,normal.y,normal.z, normal.x,normal.y,normal.z, normal.x,normal.y,normal.z, normal.x,normal.y,normal.z];
   }
 } 

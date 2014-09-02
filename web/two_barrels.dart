@@ -7,7 +7,9 @@ import 'dart:web_gl' as webgl;
 import 'dart:typed_data';
 import 'dart:math' as math;
 
+part 'renderable.dart';
 part 'segment.dart';
+part 'floortile.dart';
 part 'player.dart';
 part 'rendergroup.dart';
 
@@ -201,19 +203,20 @@ class Lesson07 {
   }
 
   void _initBuffers() {
-    List<Segment> wsegments, fsegments;
+    List<Segment> wsegments;
+    List<FloorTile> ftiles;
     wsegments = new List<Segment>();
-    fsegments = new List<Segment>();
+    ftiles = new List<FloorTile>();
     
     wsegments.add(new Segment(new Vector2(-1.0,-1.0), new Vector2(-1.0, 1.0)));
     wsegments.add(new Segment(new Vector2(-1.0, 1.0), new Vector2( 2.0, 1.0)));
     wsegments.add(new Segment(new Vector2( 2.0, 1.0), new Vector2( 2.0,-1.0)));
     
-    fsegments.add(new Segment(new Vector2(-1.0,-1.0), new Vector2(2.0, -1.0)));
+    ftiles.add(new FloorTile(new Vector2(-1.0,-1.0), new Vector2(-1.0, 1.0), new Vector2(2.0,1.0), new Vector2(2.0,-1.0)));
     
     
-    rendergroups[textures["./assets/trak5/tile2a.png"]].segments = wsegments;
-    rendergroups[textures["./assets/trak5/floor2a.png"]].segments = fsegments;
+    rendergroups[textures["./assets/trak5/tile2a.png"]].renderables = wsegments;
+    rendergroups[textures["./assets/trak5/floor2a.png"]].renderables = ftiles;
     
     
     rendergroups.forEach((texture, rendergroup){
@@ -297,7 +300,9 @@ class Lesson07 {
 
       player.move(elapsed);
       rendergroups.forEach((texture, rendergroup){
-        player.clipMotion(rendergroup.segments);
+        if (rendergroup.renderables is List<Segment>) {
+          player.clipMotion(rendergroup.renderables);
+        }
       });
     }
     _lastTime = timeNow;
