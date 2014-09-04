@@ -74,7 +74,7 @@ class FloorTile extends Renderable {
   }
   
   List<double> getNormals() {
-    Vector3 normal = (getV23D()-getV13D()).cross((getV33D()-getV13D())).normalize();
+    Vector3 normal = new Vector3(0.0,0.0,1.0);
     return [normal.x,normal.y,normal.z, normal.x,normal.y,normal.z, normal.x,normal.y,normal.z, normal.x,normal.y,normal.z];
   }
 } 
