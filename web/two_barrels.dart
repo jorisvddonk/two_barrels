@@ -39,7 +39,7 @@ class Lesson07 {
   int _aVertexNormal;
   webgl.UniformLocation _uPMatrix;
   webgl.UniformLocation _uMVMatrix;
-  webgl.UniformLocation _uNMatrix;
+  webgl.UniformLocation _uIdentMatrix;
   webgl.UniformLocation _uSampler;
   webgl.UniformLocation _uUseLighting;
   webgl.UniformLocation _uLightingDirection;
@@ -114,7 +114,7 @@ class Lesson07 {
   
     uniform mat4 uMVMatrix;
     uniform mat4 uPMatrix;
-    uniform mat3 uNMatrix;
+    uniform mat3 uIdentMatrix;
     
     void main(void) {
       // copy values into shared vars
@@ -125,7 +125,7 @@ class Lesson07 {
       vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
       gl_Position = uPMatrix * vPosition;
       vTextureCoord = aTextureCoord;
-      vNormal = uNMatrix * aVertexNormal;
+      vNormal = uIdentMatrix * aVertexNormal;
     }
     """;
 
@@ -137,12 +137,18 @@ class Lesson07 {
     varying vec4 vPosition;
     varying vec3 vNormal;
     varying vec3 vVertexNormal;
+    varying vec3 vVertexPosition;
     uniform sampler2D uSampler;
     
     void main(void) { 
-      float lightVal = max(0.2, dot(normalize(vVertexNormal), normalize(vec3(0.3, 1.2, 0.8))));
       vec4 fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-      gl_FragColor = vec4(fragmentColor.r*lightVal, fragmentColor.g*lightVal, fragmentColor.b*lightVal, 1.0);
+
+      vec3 lightDir = normalize(vec3(-0.25, -1.75, 0.5) - vVertexPosition.xyz); // light direction for each pixel
+      float lightVal = max(dot(normalize(vNormal), lightDir), 0.0);
+      vec3 light3Val = vec3(1.0,0.8,0.8) * lightVal + vec3(0.0,0.0,0.3); // light*lightVal * ambient
+
+      gl_FragColor = vec4(fragmentColor.r*light3Val.r, fragmentColor.g*light3Val.g, fragmentColor.b*light3Val.b, 1.0);
+      //gl_FragColor = vec4(light3Val.r, light3Val.g, light3Val.b, 1.0); // debugging view
     }
     """;
 
@@ -190,7 +196,7 @@ class Lesson07 {
 
     _uPMatrix = _gl.getUniformLocation(_shaderProgram, "uPMatrix");
     _uMVMatrix = _gl.getUniformLocation(_shaderProgram, "uMVMatrix");
-    _uNMatrix = _gl.getUniformLocation(_shaderProgram, "uNMatrix");
+    _uIdentMatrix = _gl.getUniformLocation(_shaderProgram, "uIdentMatrix");
     _uSampler = _gl.getUniformLocation(_shaderProgram, "uSampler");
     _uUseLighting = _gl.getUniformLocation(_shaderProgram, "uUseLighting");
     _uAmbientColor = _gl.getUniformLocation(_shaderProgram, "uAmbientColor");
@@ -211,7 +217,7 @@ class Lesson07 {
     wsegments.add(new Segment(new Vector2( 0.0,-2.0), new Vector2(-0.5,-2.0)));
     wsegments.add(new Segment(new Vector2(-0.5,-2.0), new Vector2(-1.0,-1.0)));
     
-    ftiles.add(new FloorTile(new Vector2(-1.0,-1.0), new Vector2(-1.0, 1.0), new Vector2(2.0,1.0), new Vector2(2.0,-1.0)));
+    ftiles.add(new FloorTile(new Vector2(-1.0,-2.0), new Vector2(-1.0, 1.0), new Vector2(1.0,1.0), new Vector2(1.0,-2.0)));
     
     
     rendergroups[textures["./assets/trak5/tile2a.png"]].renderables = wsegments;
@@ -253,15 +259,10 @@ class Lesson07 {
     _gl.uniformMatrix4fv(_uPMatrix, false, _pMatrix.storage);
     _gl.uniformMatrix4fv(_uMVMatrix, false, _mvMatrix.storage);
 
-    Matrix3 normalMatrix = _mvMatrix.getRotation();
-    // flip Y and Z, as the player moves around on the X/Y plane and Z is 'upwards'
-    // TODO: perhaps figure out if this is really what should be done (e.g. if this kind of hackery is common). :P
-    Vector3 r2 = normalMatrix.row2;
-    Vector3 r1 = normalMatrix.row1;
-    normalMatrix.row2 = r1;
-    normalMatrix.row1 = r2;
-    
-    _gl.uniformMatrix3fv(_uNMatrix, false, normalMatrix.storage);
+    Matrix3 identMatrix = new Matrix3.identity();
+    identMatrix.invert();
+    identMatrix.transpose();
+    _gl.uniformMatrix3fv(_uIdentMatrix, false, identMatrix.storage);
   }
 
   bool render(double time) {
