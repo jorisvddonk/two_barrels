@@ -11,8 +11,8 @@ class Player {
   double zpos = -0.5;
   
   Player () {
-    this.position = new Vector2(0.0,0.0);
-    this.rotation = new Vector2(0.0,1.0);
+    this.position = new Vector2(0.0,0.8);
+    this.rotation = new Vector2(0.0,-1.0);
     this.movement = new Vector2(0.0,0.0);
   }
   

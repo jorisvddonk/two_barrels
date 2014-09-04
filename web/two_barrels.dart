@@ -140,9 +140,9 @@ class Lesson07 {
     uniform sampler2D uSampler;
     
     void main(void) { 
-      vec4 fragmentColor;
-      fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-      gl_FragColor = vec4(abs(vNormal.x)*1.0, abs(vNormal.y)*1.0, abs(vNormal.z)*1.0, 1.0);
+      float lightVal = max(0.2, dot(normalize(vVertexNormal), normalize(vec3(0.3, 1.2, 0.8))));
+      vec4 fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+      gl_FragColor = vec4(fragmentColor.r*lightVal, fragmentColor.g*lightVal, fragmentColor.b*lightVal, 1.0);
     }
     """;
 
@@ -205,8 +205,11 @@ class Lesson07 {
     ftiles = new List<FloorTile>();
     
     wsegments.add(new Segment(new Vector2(-1.0,-1.0), new Vector2(-1.0, 1.0)));
-    wsegments.add(new Segment(new Vector2(-1.0, 1.0), new Vector2( 2.0, 1.0)));
-    wsegments.add(new Segment(new Vector2( 2.0, 1.0), new Vector2( 2.0,-1.0)));
+    wsegments.add(new Segment(new Vector2(-1.0, 1.0), new Vector2( 1.0, 1.0)));
+    wsegments.add(new Segment(new Vector2( 1.0, 1.0), new Vector2( 1.0,-1.0)));
+    wsegments.add(new Segment(new Vector2( 1.0,-1.0), new Vector2( 0.0,-2.0)));
+    wsegments.add(new Segment(new Vector2( 0.0,-2.0), new Vector2(-0.5,-2.0)));
+    wsegments.add(new Segment(new Vector2(-0.5,-2.0), new Vector2(-1.0,-1.0)));
     
     ftiles.add(new FloorTile(new Vector2(-1.0,-1.0), new Vector2(-1.0, 1.0), new Vector2(2.0,1.0), new Vector2(2.0,-1.0)));
     
