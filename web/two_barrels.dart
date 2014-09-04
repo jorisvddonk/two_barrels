@@ -100,8 +100,7 @@ class Lesson07 {
   }
 
   void _initShaders() {
-    // vertex shader source code. uPosition is our variable that we'll
-    // use to create animation
+    // vertex shader
     String vsSource = """
     attribute vec3 aVertexPosition;
     attribute vec3 aVertexNormal;
@@ -109,6 +108,8 @@ class Lesson07 {
 
     varying vec4 vPosition;
     varying vec3 vNormal;
+    varying vec3 vVertexNormal;
+    varying vec3 vVertexPosition;
     varying vec2 vTextureCoord;
   
     uniform mat4 uMVMatrix;
@@ -116,6 +117,11 @@ class Lesson07 {
     uniform mat3 uNMatrix;
     
     void main(void) {
+      // copy values into shared vars
+      vVertexNormal = aVertexNormal;
+      vVertexPosition = aVertexPosition;
+
+      // do other stuff
       vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
       gl_Position = uPMatrix * vPosition;
       vTextureCoord = aTextureCoord;
@@ -123,18 +129,20 @@ class Lesson07 {
     }
     """;
 
-    // fragment shader source code. uColor is our variable that we'll
-    // use to animate color
+    // fragment shader
     String fsSource = """
     precision mediump float;
 
     varying vec2 vTextureCoord;
+    varying vec4 vPosition;
+    varying vec3 vNormal;
+    varying vec3 vVertexNormal;
     uniform sampler2D uSampler;
     
     void main(void) { 
       vec4 fragmentColor;
       fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-      gl_FragColor = vec4(fragmentColor.rgb, fragmentColor.a);
+      gl_FragColor = vec4(abs(vNormal.x)*1.0, abs(vNormal.y)*1.0, abs(vNormal.z)*1.0, 1.0);
     }
     """;
 
@@ -242,9 +250,14 @@ class Lesson07 {
     _gl.uniformMatrix4fv(_uPMatrix, false, _pMatrix.storage);
     _gl.uniformMatrix4fv(_uMVMatrix, false, _mvMatrix.storage);
 
-    //Matrix3 normalMatrix = _mvMatrix.toInverseMat3();
     Matrix3 normalMatrix = _mvMatrix.getRotation();
-    normalMatrix.transpose();
+    // flip Y and Z, as the player moves around on the X/Y plane and Z is 'upwards'
+    // TODO: perhaps figure out if this is really what should be done (e.g. if this kind of hackery is common). :P
+    Vector3 r2 = normalMatrix.row2;
+    Vector3 r1 = normalMatrix.row1;
+    normalMatrix.row2 = r1;
+    normalMatrix.row1 = r2;
+    
     _gl.uniformMatrix3fv(_uNMatrix, false, normalMatrix.storage);
   }
 
