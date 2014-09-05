@@ -7,6 +7,7 @@ class RenderGroup {
    * 
    */
   webgl.Texture texture;
+  webgl.Texture texture_normal;
   List<Renderable> renderables;
   webgl.Buffer cubeVertexTextureCoordBuffer;
   webgl.Buffer cubeVertexPositionBuffer;
@@ -55,7 +56,7 @@ class RenderGroup {
     inited = true;
   }
   
-  void render(webgl.RenderingContext gl, int _aVertexPosition, int _aTextureCoord, int _aVertexNormal) {
+  void render(webgl.RenderingContext gl, int _aVertexPosition, int _aTextureCoord, int _aVertexNormal, webgl.Program _shaderProgram, webgl.UniformLocation _uUseNormalMap) {
     if (!inited) {
       return;
     }
@@ -82,6 +83,16 @@ class RenderGroup {
 
     gl.activeTexture(webgl.RenderingContext.TEXTURE0);
     gl.bindTexture(webgl.RenderingContext.TEXTURE_2D, texture);
+    gl.uniform1i(gl.getUniformLocation(_shaderProgram, "uSampler"), 0);
+
+    if (texture_normal != null) {
+      gl.activeTexture(webgl.RenderingContext.TEXTURE1);
+      gl.bindTexture(webgl.RenderingContext.TEXTURE_2D, texture_normal);
+      gl.uniform1i(gl.getUniformLocation(_shaderProgram, "uSamplerNormal"), 1);
+      gl.uniform1i(_uUseNormalMap, 1);
+    } else {
+      gl.uniform1i(_uUseNormalMap, 0);
+    }
 
 
     gl.bindBuffer(webgl.RenderingContext.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);

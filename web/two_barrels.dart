@@ -40,8 +40,7 @@ class Lesson07 {
   webgl.UniformLocation _uPMatrix;
   webgl.UniformLocation _uMVMatrix;
   webgl.UniformLocation _uIdentMatrix;
-  webgl.UniformLocation _uSampler;
-  webgl.UniformLocation _uUseLighting;
+  webgl.UniformLocation _uUseNormalMap;
   webgl.UniformLocation _uLightingDirection;
   webgl.UniformLocation _uAmbientColor;
   webgl.UniformLocation _uDirectionalColor;
@@ -81,7 +80,7 @@ class Lesson07 {
     initGame();
     _initShaders();
     _initTexture("./assets/trak5/floor2a.png");
-    _initTexture("./assets/trak5/tile2a.png");
+    _initTexture("./assets/trak5/tile2a.png", "./assets/trak5/tile2a_nm.png");
    _initBuffers();
 
     
@@ -139,12 +138,24 @@ class Lesson07 {
     varying vec3 vVertexNormal;
     varying vec3 vVertexPosition;
     uniform sampler2D uSampler;
+    uniform sampler2D uSamplerNormal;
+    uniform bool uUseNormalMap;
     
-    void main(void) { 
-      vec4 fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+    void main(void) {
+      vec4 fragmentColor; 
+      
+      fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
 
-      vec3 lightDir = normalize(vec3(-0.25, -1.75, 0.5) - vVertexPosition.xyz); // light direction for each pixel
-      float lightVal = max(dot(normalize(vNormal), lightDir), 0.0);
+      vec3 lightDir;
+      lightDir = normalize(vec3(-0.25, -1.75, 0.5) - vVertexPosition.xyz); // light direction for each pixel
+
+      
+      float lightVal;
+      lightVal = max(dot(normalize(vNormal), lightDir), 0.0);
+      if (uUseNormalMap) {
+        //TODO: use the fucking normal map
+        //normalmap data: texture2D(uSamplerNormal, vec2(vTextureCoord.s, vTextureCoord.t))
+      }
       vec3 light3Val = vec3(1.0,0.8,0.8) * lightVal + vec3(0.0,0.0,0.3); // light*lightVal * ambient
 
       gl_FragColor = vec4(fragmentColor.r*light3Val.r, fragmentColor.g*light3Val.g, fragmentColor.b*light3Val.b, 1.0);
@@ -197,8 +208,7 @@ class Lesson07 {
     _uPMatrix = _gl.getUniformLocation(_shaderProgram, "uPMatrix");
     _uMVMatrix = _gl.getUniformLocation(_shaderProgram, "uMVMatrix");
     _uIdentMatrix = _gl.getUniformLocation(_shaderProgram, "uIdentMatrix");
-    _uSampler = _gl.getUniformLocation(_shaderProgram, "uSampler");
-    _uUseLighting = _gl.getUniformLocation(_shaderProgram, "uUseLighting");
+    _uUseNormalMap = _gl.getUniformLocation(_shaderProgram, "uUseNormalMap");
     _uAmbientColor = _gl.getUniformLocation(_shaderProgram, "uAmbientColor");
     _uLightingDirection = _gl.getUniformLocation(_shaderProgram, "uLightingDirection");
     _uDirectionalColor = _gl.getUniformLocation(_shaderProgram, "uDirectionalColor");
@@ -229,7 +239,7 @@ class Lesson07 {
     });
   }
 
-  void _initTexture(String src) {
+  void _initTexture(String src, [String src_nm=null]) {
     webgl.Texture textur = _gl.createTexture();
     textures[src] = textur;
     ImageElement image = new Element.tag('img');
@@ -237,8 +247,23 @@ class Lesson07 {
       _handleLoadedTexture(textur, image);
     });
     image.src = src;
+    
+    webgl.Texture textur_nm;
+    if (src_nm != null) {
+      textur_nm = _gl.createTexture();
+      textures[src_nm] = textur_nm;
+      ImageElement image_nm = new Element.tag('img');
+      image_nm.onLoad.listen((e) {
+        _handleLoadedTexture(textur_nm, image_nm);
+      });
+      image_nm.src = src_nm;
+    }
+    
     rendergroups.putIfAbsent(textur, (){
       RenderGroup rg = new RenderGroup(textur, src);
+      if (src_nm != null) {
+        rg.texture_normal = textur_nm;
+      }
       return rg;
     });
   }
@@ -280,7 +305,7 @@ class Lesson07 {
 
     _setMatrixUniforms();
     rendergroups.forEach((texture, rendergroup){
-      rendergroup.render(_gl, _aVertexPosition, _aTextureCoord, _aVertexNormal);
+      rendergroup.render(_gl, _aVertexPosition, _aTextureCoord, _aVertexNormal, _shaderProgram, _uUseNormalMap);
     });
     
     // move
