@@ -81,4 +81,9 @@ class Segment extends Renderable {
     Vector3 normal = getV23D_low().sub(getV13D_low()).cross(getV23D_high().sub(getV13D_low())).normalize();
     return [normal.x,normal.y,normal.z, normal.x,normal.y,normal.z, normal.x,normal.y,normal.z, normal.x,normal.y,normal.z];
   }
+  
+  List<double> getTangents() {
+    Vector3 tangent = getV23D_low().sub(getV13D_low()).normalize();    
+    return [tangent.x,tangent.y,tangent.z, tangent.x,tangent.y,tangent.z, tangent.x,tangent.y,tangent.z, tangent.x,tangent.y,tangent.z];
+  }
 } 

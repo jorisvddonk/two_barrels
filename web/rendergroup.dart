@@ -13,7 +13,8 @@ class RenderGroup {
   webgl.Buffer cubeVertexPositionBuffer;
   webgl.Buffer cubeVertexIndexBuffer;
   webgl.Buffer cubeVertexNormalBuffer;
-  List<double> vertices, textureCoords, vertexNormals, colors;
+  webgl.Buffer cubeVertexTangentBuffer;
+  List<double> vertices, textureCoords, vertexNormals, vertexTangents, colors;
   List<int> cubeVertexIndices;
   bool inited = false;
   String texture_src;
@@ -52,11 +53,18 @@ class RenderGroup {
       prev.addAll(seg.getNormals());
       return prev;
     });
+    
+    // tangent vectors
+    cubeVertexTangentBuffer = gl.createBuffer();
+    vertexTangents = renderables.fold([], (prev, seg) {
+      prev.addAll(seg.getTangents());
+      return prev;
+    });
 
     inited = true;
   }
   
-  void render(webgl.RenderingContext gl, int _aVertexPosition, int _aTextureCoord, int _aVertexNormal, webgl.Program _shaderProgram, webgl.UniformLocation _uUseNormalMap) {
+  void render(webgl.RenderingContext gl, int _aVertexPosition, int _aTextureCoord, int _aVertexNormal, int _aVertexTangent, webgl.Program _shaderProgram, webgl.UniformLocation _uUseNormalMap) {
     if (!inited) {
       return;
     }
@@ -68,6 +76,8 @@ class RenderGroup {
     gl.bufferData(webgl.RenderingContext.ELEMENT_ARRAY_BUFFER, new Uint16List.fromList(cubeVertexIndices), webgl.RenderingContext.STATIC_DRAW); //TODO: cache
     gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, cubeVertexNormalBuffer);
     gl.bufferData(webgl.RenderingContext.ARRAY_BUFFER, new Float32List.fromList(vertexNormals), webgl.RenderingContext.STATIC_DRAW); //TODO: cache
+    gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, cubeVertexTangentBuffer);
+    gl.bufferData(webgl.RenderingContext.ARRAY_BUFFER, new Float32List.fromList(vertexTangents), webgl.RenderingContext.STATIC_DRAW); //TODO: cache
     
     // vertices
     gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, cubeVertexPositionBuffer);
@@ -81,6 +91,12 @@ class RenderGroup {
     gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, cubeVertexNormalBuffer);
     gl.vertexAttribPointer(_aVertexNormal, 3, webgl.RenderingContext.FLOAT, false, 0, 0);
 
+    
+    // tangent vectors
+    gl.bindBuffer(webgl.RenderingContext.ARRAY_BUFFER, cubeVertexTangentBuffer);
+    gl.vertexAttribPointer(_aVertexTangent, 3, webgl.RenderingContext.FLOAT, false, 0, 0);
+
+    
     gl.activeTexture(webgl.RenderingContext.TEXTURE0);
     gl.bindTexture(webgl.RenderingContext.TEXTURE_2D, texture);
     gl.uniform1i(gl.getUniformLocation(_shaderProgram, "uSampler"), 0);

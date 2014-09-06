@@ -77,4 +77,8 @@ class FloorTile extends Renderable {
     Vector3 normal = new Vector3(0.0,0.0,1.0);
     return [normal.x,normal.y,normal.z, normal.x,normal.y,normal.z, normal.x,normal.y,normal.z, normal.x,normal.y,normal.z];
   }
+  List<double> getTangents() {
+    Vector3 tangent = new Vector3(1.0,0.0,0.0);
+    return [tangent.x,tangent.y,tangent.z, tangent.x,tangent.y,tangent.z, tangent.x,tangent.y,tangent.z, tangent.x,tangent.y,tangent.z];
+  }
 } 

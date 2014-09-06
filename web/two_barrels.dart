@@ -38,6 +38,7 @@ class TwoBarrels {
   int _aVertexPosition;
   int _aTextureCoord;
   int _aVertexNormal;
+  int _aVertexTangent;
   webgl.UniformLocation _uPMatrix;
   webgl.UniformLocation _uMVMatrix;
   webgl.UniformLocation _uIdentMatrix;
@@ -72,6 +73,7 @@ class TwoBarrels {
     _viewportWidth = canvas.width;
     _viewportHeight = canvas.height;
     _gl = canvas.getContext("experimental-webgl");
+    _gl.getExtension('OES_standard_derivatives');
 
     _mvMatrix = new Matrix4.identity();
     _pMatrix = new Matrix4.identity();
@@ -80,7 +82,7 @@ class TwoBarrels {
 
     initGame();
     _initShaders().then((v) {
-      _initTexture("FLOOR", "./assets/trak5/floor2a.png");
+      _initTexture("FLOOR", "./assets/trak5/floor2a.png", "./assets/trak5/floor2a_nm.png");
       _initTexture("WALL", "./assets/trak5/tile2a.png", "./assets/trak5/tile2a_nm.png");
       _initBuffers();
     });
@@ -154,6 +156,9 @@ class TwoBarrels {
 
          _aVertexNormal = _gl.getAttribLocation(_shaderProgram, "aVertexNormal");
          _gl.enableVertexAttribArray(_aVertexNormal);
+         
+         _aVertexTangent = _gl.getAttribLocation(_shaderProgram, "aVertexTangent");
+         _gl.enableVertexAttribArray(_aVertexTangent);
 
          _uPMatrix = _gl.getUniformLocation(_shaderProgram, "uPMatrix");
          _uMVMatrix = _gl.getUniformLocation(_shaderProgram, "uMVMatrix");
@@ -239,8 +244,8 @@ class TwoBarrels {
     _gl.uniformMatrix4fv(_uMVMatrix, false, _mvMatrix.storage);
 
     Matrix3 identMatrix = new Matrix3.identity();
-    identMatrix.invert();
-    identMatrix.transpose();
+    //identMatrix.invert();
+    //identMatrix.transpose();
     _gl.uniformMatrix3fv(_uIdentMatrix, false, identMatrix.storage);
   }
 
@@ -259,7 +264,7 @@ class TwoBarrels {
 
     _setMatrixUniforms();
     rendergroups.forEach((texture, rendergroup){
-      rendergroup.render(_gl, _aVertexPosition, _aTextureCoord, _aVertexNormal, _shaderProgram, _uUseNormalMap);
+      rendergroup.render(_gl, _aVertexPosition, _aTextureCoord, _aVertexNormal, _aVertexTangent, _shaderProgram, _uUseNormalMap);
     });
     
     // move
@@ -285,7 +290,7 @@ class TwoBarrels {
       player.move(elapsed);
       rendergroups.forEach((texture, rendergroup){
         if (rendergroup.renderables is List<Segment>) {
-          player.clipMotion(rendergroup.renderables);
+          //player.clipMotion(rendergroup.renderables);
         }
       });
     }
