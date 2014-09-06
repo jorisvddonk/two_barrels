@@ -19,7 +19,7 @@ part 'rendergroup.dart';
  * http://learningwebgl.com/blog/?p=571
  * https://github.com/martinsik/dart-webgl-tutorials
  */
-class Lesson07 {
+class TwoBarrels {
 
   CanvasElement _canvas;
   webgl.RenderingContext _gl;
@@ -63,7 +63,7 @@ class Lesson07 {
     _viewportHeight = height;
   }
 
-  Lesson07(CanvasElement canvas) {
+  TwoBarrels(CanvasElement canvas) {
     window.onResize.listen((e){
       resize(canvas, e.currentTarget.innerWidth, e.currentTarget.innerHeight);
     });
@@ -244,7 +244,7 @@ class Lesson07 {
     _gl.uniformMatrix3fv(_uIdentMatrix, false, identMatrix.storage);
   }
 
-  bool render(double time) {
+  void render(double time) {
     _gl.viewport(0, 0, _viewportWidth, _viewportHeight);
     _gl.clear(webgl.RenderingContext.COLOR_BUFFER_BIT | webgl.RenderingContext.DEPTH_BUFFER_BIT);
 
@@ -337,6 +337,6 @@ class Lesson07 {
 }
 
 void main() {
-  Lesson07 lesson = new Lesson07(document.querySelector('#game'));
-  lesson.start();
+  TwoBarrels tb = new TwoBarrels(document.querySelector('#game'));
+  tb.start();
 }
