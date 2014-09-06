@@ -80,8 +80,8 @@ class TwoBarrels {
 
     initGame();
     _initShaders().then((v) {
-      _initTexture("./assets/trak5/floor2a.png");
-      _initTexture("./assets/trak5/tile2a.png", "./assets/trak5/tile2a_nm.png");
+      _initTexture("FLOOR", "./assets/trak5/floor2a.png");
+      _initTexture("WALL", "./assets/trak5/tile2a.png", "./assets/trak5/tile2a_nm.png");
       _initBuffers();
     });
 
@@ -184,8 +184,8 @@ class TwoBarrels {
     ftiles.add(new FloorTile(new Vector2(-1.0,-2.0), new Vector2(-1.0, 1.0), new Vector2(1.0,1.0), new Vector2(1.0,-2.0)));
     
     
-    rendergroups[textures["./assets/trak5/tile2a.png"]].renderables = wsegments;
-    rendergroups[textures["./assets/trak5/floor2a.png"]].renderables = ftiles;
+    rendergroups[textures["WALL"]].renderables = wsegments;
+    rendergroups[textures["FLOOR"]].renderables = ftiles;
     
     
     rendergroups.forEach((texture, rendergroup){
@@ -193,9 +193,9 @@ class TwoBarrels {
     });
   }
 
-  void _initTexture(String src, [String src_nm=null]) {
+  void _initTexture(String name, String src, [String src_nm=null]) {
     webgl.Texture textur = _gl.createTexture();
-    textures[src] = textur;
+    textures[name] = textur;
     ImageElement image = new Element.tag('img');
     image.onLoad.listen((e) {
       _handleLoadedTexture(textur, image);
@@ -205,7 +205,7 @@ class TwoBarrels {
     webgl.Texture textur_nm;
     if (src_nm != null) {
       textur_nm = _gl.createTexture();
-      textures[src_nm] = textur_nm;
+      textures[name + "_nm"] = textur_nm;
       ImageElement image_nm = new Element.tag('img');
       image_nm.onLoad.listen((e) {
         _handleLoadedTexture(textur_nm, image_nm);
