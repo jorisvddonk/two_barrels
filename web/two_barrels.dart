@@ -1,6 +1,7 @@
 library two_barrels;
 
 import 'dart:html';
+import 'dart:async';
 import 'package:vector_math/vector_math.dart';
 import 'dart:collection';
 import 'dart:web_gl' as webgl;
@@ -78,10 +79,13 @@ class Lesson07 {
     rendergroups = new HashMap<webgl.Texture, RenderGroup>();
 
     initGame();
-    _initShaders();
-    _initTexture("./assets/trak5/floor2a.png");
-    _initTexture("./assets/trak5/tile2a.png", "./assets/trak5/tile2a_nm.png");
-   _initBuffers();
+    _initShaders().then((v) {
+      _initTexture("./assets/trak5/floor2a.png");
+      _initTexture("./assets/trak5/tile2a.png", "./assets/trak5/tile2a_nm.png");
+      _initBuffers();
+    });
+
+   
 
     
     _gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -97,122 +101,72 @@ class Lesson07 {
   void initGame() {
     player = new Player();    
   }
-
-  void _initShaders() {
-    // vertex shader
-    String vsSource = """
-    attribute vec3 aVertexPosition;
-    attribute vec3 aVertexNormal;
-    attribute vec2 aTextureCoord;
-
-    varying vec4 vPosition;
-    varying vec3 vNormal;
-    varying vec3 vVertexNormal;
-    varying vec3 vVertexPosition;
-    varying vec2 vTextureCoord;
   
-    uniform mat4 uMVMatrix;
-    uniform mat4 uPMatrix;
-    uniform mat3 uIdentMatrix;
-    
-    void main(void) {
-      // copy values into shared vars
-      vVertexNormal = aVertexNormal;
-      vVertexPosition = aVertexPosition;
-
-      // do other stuff
-      vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
-      gl_Position = uPMatrix * vPosition;
-      vTextureCoord = aTextureCoord;
-      vNormal = uIdentMatrix * aVertexNormal;
-    }
-    """;
-
-    // fragment shader
-    String fsSource = """
-    precision mediump float;
-
-    varying vec2 vTextureCoord;
-    varying vec4 vPosition;
-    varying vec3 vNormal;
-    varying vec3 vVertexNormal;
-    varying vec3 vVertexPosition;
-    uniform sampler2D uSampler;
-    uniform sampler2D uSamplerNormal;
-    uniform bool uUseNormalMap;
-    
-    void main(void) {
-      vec4 fragmentColor; 
-      
-      fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-
-      vec3 lightDir;
-      lightDir = normalize(vec3(-0.25, -1.75, 0.5) - vVertexPosition.xyz); // light direction for each pixel
-
-      
-      float lightVal;
-      lightVal = max(dot(normalize(vNormal), lightDir), 0.0);
-      if (uUseNormalMap) {
-        //TODO: use the fucking normal map
-        //normalmap data: texture2D(uSamplerNormal, vec2(vTextureCoord.s, vTextureCoord.t))
-      }
-      vec3 light3Val = vec3(1.0,0.8,0.8) * lightVal + vec3(0.0,0.0,0.3); // light*lightVal * ambient
-
-      gl_FragColor = vec4(fragmentColor.r*light3Val.r, fragmentColor.g*light3Val.g, fragmentColor.b*light3Val.b, 1.0);
-      //gl_FragColor = vec4(light3Val.r, light3Val.g, light3Val.b, 1.0); // debugging view
-    }
-    """;
-
-    // vertex shader compilation
-    webgl.Shader vs = _gl.createShader(webgl.RenderingContext.VERTEX_SHADER);
-    _gl.shaderSource(vs, vsSource);
-    _gl.compileShader(vs);
-
-    // fragment shader compilation
-    webgl.Shader fs = _gl.createShader(webgl.RenderingContext.FRAGMENT_SHADER);
-    _gl.shaderSource(fs, fsSource);
-    _gl.compileShader(fs);
-
-    // attach shaders to a webgl. program
-    _shaderProgram = _gl.createProgram();
-    _gl.attachShader(_shaderProgram, vs);
-    _gl.attachShader(_shaderProgram, fs);
-    _gl.linkProgram(_shaderProgram);
-    _gl.useProgram(_shaderProgram);
-
-    /**
-     * Check if shaders were compiled properly. This is probably the most painful part
-     * since there's no way to "debug" shader compilation
-     */
-    if (!_gl.getShaderParameter(vs, webgl.RenderingContext.COMPILE_STATUS)) {
-      print(_gl.getShaderInfoLog(vs));
-    }
-
-    if (!_gl.getShaderParameter(fs, webgl.RenderingContext.COMPILE_STATUS)) {
-      print(_gl.getShaderInfoLog(fs));
-    }
-
-    if (!_gl.getProgramParameter(_shaderProgram, webgl.RenderingContext.LINK_STATUS)) {
-      print(_gl.getProgramInfoLog(_shaderProgram));
-    }
-
-    _aVertexPosition = _gl.getAttribLocation(_shaderProgram, "aVertexPosition");
-    _gl.enableVertexAttribArray(_aVertexPosition);
-
-    _aTextureCoord = _gl.getAttribLocation(_shaderProgram, "aTextureCoord");
-    _gl.enableVertexAttribArray(_aTextureCoord);
-
-    _aVertexNormal = _gl.getAttribLocation(_shaderProgram, "aVertexNormal");
-    _gl.enableVertexAttribArray(_aVertexNormal);
-
-    _uPMatrix = _gl.getUniformLocation(_shaderProgram, "uPMatrix");
-    _uMVMatrix = _gl.getUniformLocation(_shaderProgram, "uMVMatrix");
-    _uIdentMatrix = _gl.getUniformLocation(_shaderProgram, "uIdentMatrix");
-    _uUseNormalMap = _gl.getUniformLocation(_shaderProgram, "uUseNormalMap");
-    _uAmbientColor = _gl.getUniformLocation(_shaderProgram, "uAmbientColor");
-    _uLightingDirection = _gl.getUniformLocation(_shaderProgram, "uLightingDirection");
-    _uDirectionalColor = _gl.getUniformLocation(_shaderProgram, "uDirectionalColor");
+  void handleLines(String lines) {
+    print(lines);
   }
+
+  Future _initShaders() {
+    Completer completer = new Completer();
+    
+    var vs_path = "assets/foo_vert.glsl";
+    var fs_path = "assets/foo_frag.glsl";
+    HttpRequest.getString(vs_path).then((String vsSource){
+      HttpRequest.getString(fs_path).then((String fsSource){
+        // vertex shader compilation
+         webgl.Shader vs = _gl.createShader(webgl.RenderingContext.VERTEX_SHADER);
+         _gl.shaderSource(vs, vsSource);
+         _gl.compileShader(vs);
+
+         // fragment shader compilation
+         webgl.Shader fs = _gl.createShader(webgl.RenderingContext.FRAGMENT_SHADER);
+         _gl.shaderSource(fs, fsSource);
+         _gl.compileShader(fs);
+
+         // attach shaders to a webgl. program
+         _shaderProgram = _gl.createProgram();
+         _gl.attachShader(_shaderProgram, vs);
+         _gl.attachShader(_shaderProgram, fs);
+         _gl.linkProgram(_shaderProgram);
+         _gl.useProgram(_shaderProgram);
+
+         /**
+          * Check if shaders were compiled properly. This is probably the most painful part
+          * since there's no way to "debug" shader compilation
+          */
+         if (!_gl.getShaderParameter(vs, webgl.RenderingContext.COMPILE_STATUS)) {
+           print(_gl.getShaderInfoLog(vs));
+         }
+
+         if (!_gl.getShaderParameter(fs, webgl.RenderingContext.COMPILE_STATUS)) {
+           print(_gl.getShaderInfoLog(fs));
+         }
+
+         if (!_gl.getProgramParameter(_shaderProgram, webgl.RenderingContext.LINK_STATUS)) {
+           print(_gl.getProgramInfoLog(_shaderProgram));
+         }
+
+         _aVertexPosition = _gl.getAttribLocation(_shaderProgram, "aVertexPosition");
+         _gl.enableVertexAttribArray(_aVertexPosition);
+
+         _aTextureCoord = _gl.getAttribLocation(_shaderProgram, "aTextureCoord");
+         _gl.enableVertexAttribArray(_aTextureCoord);
+
+         _aVertexNormal = _gl.getAttribLocation(_shaderProgram, "aVertexNormal");
+         _gl.enableVertexAttribArray(_aVertexNormal);
+
+         _uPMatrix = _gl.getUniformLocation(_shaderProgram, "uPMatrix");
+         _uMVMatrix = _gl.getUniformLocation(_shaderProgram, "uMVMatrix");
+         _uIdentMatrix = _gl.getUniformLocation(_shaderProgram, "uIdentMatrix");
+         _uUseNormalMap = _gl.getUniformLocation(_shaderProgram, "uUseNormalMap");
+         _uAmbientColor = _gl.getUniformLocation(_shaderProgram, "uAmbientColor");
+         _uLightingDirection = _gl.getUniformLocation(_shaderProgram, "uLightingDirection");
+         _uDirectionalColor = _gl.getUniformLocation(_shaderProgram, "uDirectionalColor");     
+         completer.complete();
+      });
+    });
+    return completer.future;
+   }
 
   void _initBuffers() {
     List<Segment> wsegments;
