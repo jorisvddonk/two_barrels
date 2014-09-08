@@ -10,7 +10,9 @@
     varying vec3 vVertexPosition;
     uniform sampler2D uSampler;
     uniform sampler2D uSamplerNormal;
+    uniform sampler2D uSamplerGlow;
     uniform bool uUseNormalMap;
+    uniform bool uUseGlowMap;
 
     void main(void) {
       vec4 fragmentColor;
@@ -33,6 +35,12 @@
         nmvec = texNormal; // don't multiply nmvec with TBN
       }
 
+      vec3 glowColor; // glowcolor is always added, and is not modified by the relevant pixel's lighting value
+      glowColor = vec3(0.0,0.0,0.0); 
+      if (uUseGlowMap) {
+        glowColor = texture2D(uSamplerGlow, vec2(vTextureCoord.s, vTextureCoord.t)).rgb;
+      }
+
       lightDir = lightDir * TBN;
 
       nmvec = normalize(nmvec);
@@ -40,5 +48,9 @@
       
       lightVal = max(dot(nmvec, lightDir), 0.0);
       light3Val = vec3(1.0,1.0,1.0) * lightVal + vec3(0.0,0.0,0.0); // light*lightVal * ambient
-      gl_FragColor = vec4(fragmentColor.r*light3Val.r, fragmentColor.g*light3Val.g, fragmentColor.b*light3Val.b, 1.0);
+      gl_FragColor = vec4(
+        (fragmentColor.r*light3Val.r)+glowColor.r, 
+        (fragmentColor.g*light3Val.g)+glowColor.g, 
+        (fragmentColor.b*light3Val.b)+glowColor.b, 
+        1.0);
     }

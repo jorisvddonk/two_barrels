@@ -8,6 +8,7 @@ class RenderGroup {
    */
   webgl.Texture texture;
   webgl.Texture texture_normal;
+  webgl.Texture texture_glow;
   List<Renderable> renderables;
   webgl.Buffer cubeVertexTextureCoordBuffer;
   webgl.Buffer cubeVertexPositionBuffer;
@@ -64,7 +65,7 @@ class RenderGroup {
     inited = true;
   }
   
-  void render(webgl.RenderingContext gl, int _aVertexPosition, int _aTextureCoord, int _aVertexNormal, int _aVertexTangent, webgl.Program _shaderProgram, webgl.UniformLocation _uUseNormalMap) {
+  void render(webgl.RenderingContext gl, int _aVertexPosition, int _aTextureCoord, int _aVertexNormal, int _aVertexTangent, webgl.Program _shaderProgram, webgl.UniformLocation _uUseNormalMap, webgl.UniformLocation _uUseGlowMap) {
     if (!inited) {
       return;
     }
@@ -108,6 +109,15 @@ class RenderGroup {
       gl.uniform1i(_uUseNormalMap, 1);
     } else {
       gl.uniform1i(_uUseNormalMap, 0);
+    }
+    
+    if (texture_glow != null) {
+      gl.activeTexture(webgl.RenderingContext.TEXTURE2);
+      gl.bindTexture(webgl.RenderingContext.TEXTURE_2D, texture_glow);
+      gl.uniform1i(gl.getUniformLocation(_shaderProgram, "uSamplerGlow"), 2);
+      gl.uniform1i(_uUseGlowMap, 1);
+    } else {
+      gl.uniform1i(_uUseGlowMap, 0);
     }
 
 

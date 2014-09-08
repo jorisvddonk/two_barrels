@@ -43,6 +43,7 @@ class TwoBarrels {
   webgl.UniformLocation _uMVMatrix;
   webgl.UniformLocation _uIdentMatrix;
   webgl.UniformLocation _uUseNormalMap;
+  webgl.UniformLocation _uUseGlowMap;
   webgl.UniformLocation _uLightingDirection;
   webgl.UniformLocation _uAmbientColor;
   webgl.UniformLocation _uDirectionalColor;
@@ -84,6 +85,7 @@ class TwoBarrels {
     _initShaders().then((v) {
       _initTexture("FLOOR", "./assets/trak5/floor2a.png", "./assets/trak5/floor2a_nm.png");
       _initTexture("WALL", "./assets/trak5/tile2a.png", "./assets/trak5/tile2a_nm.png");
+      _initTexture("WALLLIGHT", "./assets/trak5/light1a.png", "./assets/trak5/light1a_nm.png", "./assets/trak5/light1a_glow.png");
       _initBuffers();
     });
 
@@ -164,6 +166,7 @@ class TwoBarrels {
          _uMVMatrix = _gl.getUniformLocation(_shaderProgram, "uMVMatrix");
          _uIdentMatrix = _gl.getUniformLocation(_shaderProgram, "uIdentMatrix");
          _uUseNormalMap = _gl.getUniformLocation(_shaderProgram, "uUseNormalMap");
+         _uUseGlowMap = _gl.getUniformLocation(_shaderProgram, "uUseGlowMap");
          _uAmbientColor = _gl.getUniformLocation(_shaderProgram, "uAmbientColor");
          _uLightingDirection = _gl.getUniformLocation(_shaderProgram, "uLightingDirection");
          _uDirectionalColor = _gl.getUniformLocation(_shaderProgram, "uDirectionalColor");     
@@ -175,21 +178,24 @@ class TwoBarrels {
 
   void _initBuffers() {
     List<Segment> wsegments;
+    List<Segment> wlsegments;
     List<FloorTile> ftiles;
     wsegments = new List<Segment>();
+    wlsegments = new List<Segment>();
     ftiles = new List<FloorTile>();
     
     wsegments.add(new Segment(new Vector2(-1.0,-1.0), new Vector2(-1.0, 1.0)));
     wsegments.add(new Segment(new Vector2(-1.0, 1.0), new Vector2( 1.0, 1.0)));
     wsegments.add(new Segment(new Vector2( 1.0, 1.0), new Vector2( 1.0,-1.0)));
     wsegments.add(new Segment(new Vector2( 1.0,-1.0), new Vector2( 0.0,-2.0)));
-    wsegments.add(new Segment(new Vector2( 0.0,-2.0), new Vector2(-0.5,-2.0)));
+    wlsegments.add(new Segment(new Vector2( 0.0,-2.0), new Vector2(-0.5,-2.0)));
     wsegments.add(new Segment(new Vector2(-0.5,-2.0), new Vector2(-1.0,-1.0)));
     
     ftiles.add(new FloorTile(new Vector2(-1.0,-2.0), new Vector2(-1.0, 1.0), new Vector2(1.0,1.0), new Vector2(1.0,-2.0)));
     
     
     rendergroups[textures["WALL"]].renderables = wsegments;
+    rendergroups[textures["WALLLIGHT"]].renderables = wlsegments;
     rendergroups[textures["FLOOR"]].renderables = ftiles;
     
     
@@ -198,7 +204,7 @@ class TwoBarrels {
     });
   }
 
-  void _initTexture(String name, String src, [String src_nm=null]) {
+  void _initTexture(String name, String src, [String src_nm=null, String src_glow=null]) {
     webgl.Texture textur = _gl.createTexture();
     textures[name] = textur;
     ImageElement image = new Element.tag('img');
@@ -218,10 +224,24 @@ class TwoBarrels {
       image_nm.src = src_nm;
     }
     
+    webgl.Texture textur_glow;
+    if (src_glow != null) {
+      textur_glow = _gl.createTexture();
+      textures[name + "_glow"] = textur_glow;
+      ImageElement image_glow = new Element.tag('img');
+      image_glow.onLoad.listen((e) {
+        _handleLoadedTexture(textur_glow, image_glow);
+      });
+      image_glow.src = src_glow;
+    }
+    
     rendergroups.putIfAbsent(textur, (){
       RenderGroup rg = new RenderGroup(textur, src);
       if (src_nm != null) {
         rg.texture_normal = textur_nm;
+      }
+      if (src_glow != null) {
+        rg.texture_glow = textur_glow;
       }
       return rg;
     });
@@ -264,7 +284,7 @@ class TwoBarrels {
 
     _setMatrixUniforms();
     rendergroups.forEach((texture, rendergroup){
-      rendergroup.render(_gl, _aVertexPosition, _aTextureCoord, _aVertexNormal, _aVertexTangent, _shaderProgram, _uUseNormalMap);
+      rendergroup.render(_gl, _aVertexPosition, _aTextureCoord, _aVertexNormal, _aVertexTangent, _shaderProgram, _uUseNormalMap, _uUseGlowMap);
     });
     
     // move
