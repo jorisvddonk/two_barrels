@@ -290,7 +290,7 @@ class TwoBarrels {
       player.move(elapsed);
       rendergroups.forEach((texture, rendergroup){
         if (rendergroup.renderables is List<Segment>) {
-          //player.clipMotion(rendergroup.renderables);
+          player.clipMotion(rendergroup.renderables);
         }
       });
     }
