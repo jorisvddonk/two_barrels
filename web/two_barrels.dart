@@ -109,10 +109,6 @@ class TwoBarrels {
   void initGame() {
     player = new Player();    
   }
-  
-  void handleLines(String lines) {
-    print(lines);
-  }
 
   Future _initShaders() {
     Completer completer = new Completer();

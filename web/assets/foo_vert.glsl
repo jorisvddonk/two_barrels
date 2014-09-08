@@ -16,9 +16,6 @@ uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 uniform mat3 uIdentMatrix;
 
-
-uniform sampler2D uSampler;
-
 void main(void) {
   // copy values into shared vars
   vVertexNormal = aVertexNormal;
