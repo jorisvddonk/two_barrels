@@ -37,8 +37,11 @@ class FloorTile extends Renderable {
     return [offset+0, offset+1, offset+2, offset+0, offset+2, offset+3];
   }
   
-  List<double> getTextureCoords() {
-    return [0.0, 0.0, (v2-v1).x, (v2-v1).y, (v3-v1).x, (v3-v1).y, (v4-v1).x, (v4-v1).y];
+  List<double> getTextureCoords([double texWidth=1.0, double texHeight=1.0]) {
+    return [0.0*(1/texWidth), 0.0*(1/texHeight), 
+            (v2-v1).x*(1/texWidth), (v2-v1).y*(1/texHeight), 
+            (v3-v1).x*(1/texWidth), (v3-v1).y*(1/texHeight), 
+            (v4-v1).x*(1/texWidth), (v4-v1).y*(1/texHeight)];
   }
   
   Vector3 getV13D() {

@@ -83,10 +83,14 @@ class TwoBarrels {
 
     initGame();
     _initShaders().then((v) {
-      _initTexture("FLOOR", "./assets/trak5/floor2a.png", "./assets/trak5/floor2a_nm.png");
-      _initTexture("WALL", "./assets/trak5/tile2a.png", "./assets/trak5/tile2a_nm.png");
-      _initTexture("WALLLIGHT", "./assets/trak5/light1a.png", "./assets/trak5/light1a_nm.png", "./assets/trak5/light1a_glow.png");
-      _initBuffers();
+      List<Future> textureFutures = new List<Future>();
+      textureFutures.add(_initTexture("FLOOR", "./assets/trak5/floor2a.png", "./assets/trak5/floor2a_nm.png"));
+      textureFutures.add(_initTexture("WALL", "./assets/trak5/tile2a.png", "./assets/trak5/tile2a_nm.png"));
+      textureFutures.add(_initTexture("WALLLIGHT", "./assets/trak5/light1a.png", "./assets/trak5/light1a_nm.png", "./assets/trak5/light1a_glow.png"));
+      
+      Future.wait(textureFutures).then((_){
+        _initBuffers();
+      });
     });
 
    
@@ -204,13 +208,22 @@ class TwoBarrels {
     });
   }
 
-  void _initTexture(String name, String src, [String src_nm=null, String src_glow=null]) {
+  Future _initTexture(String name, String src, [String src_nm=null, String src_glow=null]) {
+    Completer completer = new Completer();
+    List<Future> futures = new List<Future>();;
+    
+    RenderGroup rg = new RenderGroup();
+    
     webgl.Texture textur = _gl.createTexture();
     textures[name] = textur;
     ImageElement image = new Element.tag('img');
     image.onLoad.listen((e) {
+      rg.texture = textur;
+      rg.texture_width = image.width;
+      rg.texture_height = image.height;
       _handleLoadedTexture(textur, image);
     });
+    futures.add(image.onLoad.first);
     image.src = src;
     
     webgl.Texture textur_nm;
@@ -219,8 +232,10 @@ class TwoBarrels {
       textures[name + "_nm"] = textur_nm;
       ImageElement image_nm = new Element.tag('img');
       image_nm.onLoad.listen((e) {
+        rg.texture_normal = textur_nm;
         _handleLoadedTexture(textur_nm, image_nm);
       });
+      futures.add(image_nm.onLoad.first);
       image_nm.src = src_nm;
     }
     
@@ -230,21 +245,22 @@ class TwoBarrels {
       textures[name + "_glow"] = textur_glow;
       ImageElement image_glow = new Element.tag('img');
       image_glow.onLoad.listen((e) {
+        rg.texture_glow = textur_glow;
         _handleLoadedTexture(textur_glow, image_glow);
       });
+      futures.add(image_glow.onLoad.first);
       image_glow.src = src_glow;
     }
     
     rendergroups.putIfAbsent(textur, (){
-      RenderGroup rg = new RenderGroup(textur, src);
-      if (src_nm != null) {
-        rg.texture_normal = textur_nm;
-      }
-      if (src_glow != null) {
-        rg.texture_glow = textur_glow;
-      }
       return rg;
     });
+    
+    Future.wait(futures).then((_){
+      completer.complete();
+    });
+    
+    return completer.future;
   }
 
   void _handleLoadedTexture(webgl.Texture texture, ImageElement img) {

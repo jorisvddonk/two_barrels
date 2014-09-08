@@ -9,6 +9,8 @@ class RenderGroup {
   webgl.Texture texture;
   webgl.Texture texture_normal;
   webgl.Texture texture_glow;
+  int texture_width = null;
+  int texture_height = null;
   List<Renderable> renderables;
   webgl.Buffer cubeVertexTextureCoordBuffer;
   webgl.Buffer cubeVertexPositionBuffer;
@@ -18,12 +20,9 @@ class RenderGroup {
   List<double> vertices, textureCoords, vertexNormals, vertexTangents, colors;
   List<int> cubeVertexIndices;
   bool inited = false;
-  String texture_src;
   
-  RenderGroup (webgl.Texture texture, String texture_src) {
-    this.texture = texture;
+  RenderGroup () {
     this.renderables = new List<Segment>();
-    this.texture_src = texture_src;
   }
   
   void initBuffers(webgl.RenderingContext gl) {
@@ -37,7 +36,7 @@ class RenderGroup {
     // texture coordinates
     cubeVertexTextureCoordBuffer = gl.createBuffer();
     textureCoords = renderables.fold([], (prev, seg) {
-      prev.addAll(seg.getTextureCoords());
+      prev.addAll(seg.getTextureCoords(texture_width.toDouble()/512.0, texture_height.toDouble()/512.0));
       return prev;
     });
 

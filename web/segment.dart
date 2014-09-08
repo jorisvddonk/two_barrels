@@ -34,10 +34,13 @@ class Segment extends Renderable {
     return [offset+0, offset+1, offset+2, offset+0, offset+2, offset+3];
   }
   
-  List<double> getTextureCoords() {
+  List<double> getTextureCoords([double texWidth=1.0, double texHeight=1.0]) {
     double l = this.getLength();
     double h = math.sqrt((high-low)*(high-low));
-    return [0.0, 0.0, l, 0.0, l, h, 0.0, h];
+    return [0.0*(1/texWidth), 0.0*(1/texHeight), 
+            l*(1/texWidth), 0.0*(1/texHeight), 
+            l*(1/texWidth), h*(1/texHeight), 
+            0.0*(1/texWidth), h*(1/texHeight)];
   }
   
   Vector3 getV13D_low() {
