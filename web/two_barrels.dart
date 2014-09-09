@@ -84,32 +84,9 @@ class TwoBarrels {
 
     initGame();
     _initShaders().then((v) {
-      void onDataLoaded(String responseText) {
-        List<Future> textureFutures = new List<Future>();
-        var jsonString = responseText;
-        Map textures = JSON.decode(responseText);
-        textures.keys.forEach((k){
-          print(k);
-          if (textures[k] is HashMap) {
-            HashMap tk = textures[k];
-            if (tk.containsKey("normal") && tk.containsKey("glow")) {
-              // diffuse, normal and glow
-              textureFutures.add(_initTexture(k, tk["diffuse"], tk["normal"], tk["glow"]));
-            } else if (tk.containsKey("normal")) {
-              // diffuse and normal
-              textureFutures.add(_initTexture(k, tk["diffuse"], tk["normal"]));
-            } else {
-              // just diffuse
-              textureFutures.add(_initTexture(k, tk["diffuse"]));
-            }
-          }
-          print (textures[k].runtimeType);
-        });
-        Future.wait(textureFutures).then((_){
-          _initBuffers();
-        });
-      };
-      var request = HttpRequest.getString("./assets/texturelist.json").then(onDataLoaded);
+      loadMap("./assets/map01.json").then((_){
+        _initBuffers();
+      });
     });
     
     _gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -120,6 +97,88 @@ class TwoBarrels {
     
     resize(canvas, window.innerWidth, window.innerHeight);
 
+  }
+  
+  Future loadTextures(Map textures) {
+    /*
+       Input:
+       Map like this:
+       "FLOOR": {
+         "diffuse": "./assets/trak5/floor2a.png",
+         "normal": "./assets/trak5/floor2a_nm.png",
+         "glow": "./assets/trak5/floor2a_glow.png",
+       },
+       (normal and glow are optional)
+     */
+    Completer completer = new Completer();
+
+    List<Future> textureFutures = new List<Future>();
+    textures.keys.forEach((k){
+      if (textures[k] is HashMap) {
+        HashMap tk = textures[k];
+        if (tk.containsKey("normal") && tk.containsKey("glow")) {
+          // diffuse, normal and glow
+          textureFutures.add(_initTexture(k, tk["diffuse"], tk["normal"], tk["glow"]));
+        } else if (tk.containsKey("normal")) {
+          // diffuse and normal
+          textureFutures.add(_initTexture(k, tk["diffuse"], tk["normal"]));
+        } else {
+          // just diffuse
+          textureFutures.add(_initTexture(k, tk["diffuse"]));
+        }
+      }
+    });
+    Future.wait(textureFutures).then((_){
+      completer.complete();
+    });
+    
+    return completer.future;
+  }
+  
+  Future loadMap(String map_json_location) {
+    Completer completer = new Completer();
+
+    void onDataLoaded(String responseText) {
+      
+      var jsonString = responseText;
+      Map json = JSON.decode(responseText);
+      Map textures = json["textures"];
+      loadTextures(textures).then((_){
+        createSegments(json["segments"]);
+        createFloortiles(json["floortiles"]);
+        completer.complete();
+      });
+
+    };
+    var request = HttpRequest.getString(map_json_location).then(onDataLoaded);
+    
+    return completer.future;    
+  }
+  
+  void createSegments(Map segments) {
+    segments.keys.forEach((k){
+      List<Segment> segs = new List<Segment>();
+      if (segments[k] is List<double>) {
+        List<double> vertices = segments[k];
+        for (int i = 0; i < vertices.length / 4; i++) {
+          segs.add(new Segment(new Vector2(vertices[(i*4)+0], vertices[(i*4)+1]), new Vector2(vertices[(i*4)+2], vertices[(i*4)+3])));
+        }
+        rendergroups[textures[k]].renderables = segs;
+      }
+    });    
+  }
+  
+  void createFloortiles(Map floortiles) {
+    floortiles.keys.forEach((k){
+      List<FloorTile> tiles  = new List<FloorTile>();
+      if (floortiles[k] is List<double>) {
+        List<double> vertices = floortiles[k];
+        for (int i = 0; i < vertices.length / 8; i++) {
+          tiles.add(new FloorTile(new Vector2(vertices[(i*8)+0],vertices[(i*8)+1]), new Vector2(vertices[(i*8)+2], vertices[(i*8)+3]), new Vector2(vertices[(i*8)+4],vertices[(i*8)+5]), new Vector2(vertices[(i*8)+6],vertices[(i*8)+7])));
+        }
+        rendergroups[textures[k]].renderables = tiles;
+      }
+    });
   }
 
   void initGame() {
@@ -193,28 +252,6 @@ class TwoBarrels {
    }
 
   void _initBuffers() {
-    List<Segment> wsegments;
-    List<Segment> wlsegments;
-    List<FloorTile> ftiles;
-    wsegments = new List<Segment>();
-    wlsegments = new List<Segment>();
-    ftiles = new List<FloorTile>();
-    
-    wsegments.add(new Segment(new Vector2(-1.0,-1.0), new Vector2(-1.0, 1.0)));
-    wsegments.add(new Segment(new Vector2(-1.0, 1.0), new Vector2( 1.0, 1.0)));
-    wsegments.add(new Segment(new Vector2( 1.0, 1.0), new Vector2( 1.0,-1.0)));
-    wsegments.add(new Segment(new Vector2( 1.0,-1.0), new Vector2( 0.0,-2.0)));
-    wlsegments.add(new Segment(new Vector2( 0.0,-2.0), new Vector2(-0.5,-2.0)));
-    wsegments.add(new Segment(new Vector2(-0.5,-2.0), new Vector2(-1.0,-1.0)));
-    
-    ftiles.add(new FloorTile(new Vector2(-1.0,-2.0), new Vector2(-1.0, 1.0), new Vector2(1.0,1.0), new Vector2(1.0,-2.0)));
-    
-    
-    rendergroups[textures["WALL"]].renderables = wsegments;
-    rendergroups[textures["WALLLIGHT"]].renderables = wlsegments;
-    rendergroups[textures["FLOOR"]].renderables = ftiles;
-    
-    
     rendergroups.forEach((texture, rendergroup){
       rendergroup.initBuffers(_gl);
     });
