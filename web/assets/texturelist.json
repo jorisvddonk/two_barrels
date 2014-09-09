@@ -1,0 +1,15 @@
+{
+	"FLOOR": {
+		"diffuse": "./assets/trak5/floor2a.png",
+		"normal": "./assets/trak5/floor2a_nm.png"
+	},
+	"WALL": {
+		"diffuse": "./assets/trak5/tile2a.png",
+		"normal": "./assets/trak5/tile2a_nm.png"
+	}, 
+	"WALLLIGHT": {
+		"diffuse": "./assets/trak5/light1a.png",
+		"normal": "./assets/trak5/light1a_nm.png",
+		"glow": "./assets/trak5/light1a_glow.png"
+	}
+}

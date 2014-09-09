@@ -1,6 +1,7 @@
 library two_barrels;
 
 import 'dart:html';
+import 'dart:convert';
 import 'dart:async';
 import 'package:vector_math/vector_math.dart';
 import 'dart:collection';
@@ -83,18 +84,33 @@ class TwoBarrels {
 
     initGame();
     _initShaders().then((v) {
-      List<Future> textureFutures = new List<Future>();
-      textureFutures.add(_initTexture("FLOOR", "./assets/trak5/floor2a.png", "./assets/trak5/floor2a_nm.png"));
-      textureFutures.add(_initTexture("WALL", "./assets/trak5/tile2a.png", "./assets/trak5/tile2a_nm.png"));
-      textureFutures.add(_initTexture("WALLLIGHT", "./assets/trak5/light1a.png", "./assets/trak5/light1a_nm.png", "./assets/trak5/light1a_glow.png"));
-      
-      Future.wait(textureFutures).then((_){
-        _initBuffers();
-      });
+      void onDataLoaded(String responseText) {
+        List<Future> textureFutures = new List<Future>();
+        var jsonString = responseText;
+        Map textures = JSON.decode(responseText);
+        textures.keys.forEach((k){
+          print(k);
+          if (textures[k] is HashMap) {
+            HashMap tk = textures[k];
+            if (tk.containsKey("normal") && tk.containsKey("glow")) {
+              // diffuse, normal and glow
+              textureFutures.add(_initTexture(k, tk["diffuse"], tk["normal"], tk["glow"]));
+            } else if (tk.containsKey("normal")) {
+              // diffuse and normal
+              textureFutures.add(_initTexture(k, tk["diffuse"], tk["normal"]));
+            } else {
+              // just diffuse
+              textureFutures.add(_initTexture(k, tk["diffuse"]));
+            }
+          }
+          print (textures[k].runtimeType);
+        });
+        Future.wait(textureFutures).then((_){
+          _initBuffers();
+        });
+      };
+      var request = HttpRequest.getString("./assets/texturelist.json").then(onDataLoaded);
     });
-
-   
-
     
     _gl.clearColor(0.0, 0.0, 0.0, 1.0);
     _gl.enable(webgl.RenderingContext.DEPTH_TEST);
