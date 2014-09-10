@@ -21,7 +21,7 @@ part 'rendergroup.dart';
  * https://github.com/martinsik/dart-webgl-tutorials
  */
 class TwoBarrels {
-
+  static const double MOUSE_SENSITIVITY = 0.5; // Multiplier for mouse x movements
   CanvasElement _canvas;
   webgl.RenderingContext _gl;
   webgl.Program _shaderProgram;
@@ -55,6 +55,9 @@ class TwoBarrels {
   double _lastTime = 0.0;
 
   List<bool> _currentlyPressedKeys;
+  int mousemove_x = 0;
+  
+  bool hasPointerLock = false;
 
   var _requestAnimationFrame;
 
@@ -67,8 +70,17 @@ class TwoBarrels {
   }
 
   TwoBarrels(CanvasElement canvas) {
+    canvas.onClick.listen((e){
+      canvas.requestPointerLock();
+    });
     window.onResize.listen((e){
       resize(canvas, e.currentTarget.innerWidth, e.currentTarget.innerHeight);
+    });
+    window.onMouseMove.listen((e){
+      mousemove_x = e.movement.x;
+    });
+    document.onPointerLockChange.listen((e){
+      hasPointerLock = canvas == document.pointerLockElement;
     });
     // weird, but without specifying size this array throws exception on []
     _currentlyPressedKeys = new List<bool>(128);
@@ -355,6 +367,13 @@ class TwoBarrels {
     // move
     _animate(time);
     _handleKeys();
+    
+    // rotate player mouse movement;
+    if (hasPointerLock) {
+      Matrix2 a = new Matrix2.rotation(radians(-mousemove_x*MOUSE_SENSITIVITY));
+      player.rotation = a.transform(player.rotation.clone());   
+      mousemove_x = 0;
+    }
 
     // keep drawing
     window.requestAnimationFrame(this.render);
@@ -402,12 +421,10 @@ class TwoBarrels {
       player.movement.add(a.transform(player.rotation.clone()).scale(-0.0001));
     }
     if (pressed(81)) { //q
-      // doesn't work
       Matrix2 a = new Matrix2.rotation(radians(1.0));
       player.rotation = a.transform(player.rotation.clone()); 
     }
     if (pressed(69)) { //e
-      // doesn't work
       Matrix2 a = new Matrix2.rotation(radians(-1.0));
       player.rotation = a.transform(player.rotation.clone());
     }
