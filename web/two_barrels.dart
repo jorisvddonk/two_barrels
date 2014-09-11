@@ -87,7 +87,6 @@ class TwoBarrels {
     _viewportWidth = canvas.width;
     _viewportHeight = canvas.height;
     _gl = canvas.getContext("experimental-webgl");
-    _gl.getExtension('OES_standard_derivatives');
 
     _mvMatrix = new Matrix4.identity();
     _pMatrix = new Matrix4.identity();
@@ -341,8 +340,6 @@ class TwoBarrels {
     _gl.uniformMatrix4fv(_uMVMatrix, false, _mvMatrix.storage);
 
     Matrix3 identMatrix = new Matrix3.identity();
-    //identMatrix.invert();
-    //identMatrix.transpose();
     _gl.uniformMatrix3fv(_uIdentMatrix, false, identMatrix.storage);
   }
 
@@ -430,10 +427,6 @@ class TwoBarrels {
     }
     if (pressed(32)) { //space
     }
-  }
-
-  double _degToRad(double degrees) {
-    return degrees * math.PI / 180;
   }
 
   void start() {
